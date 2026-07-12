@@ -2,10 +2,16 @@ package com.example.chessAI.gui;
 
 import com.example.chessAI.ChessBoard;
 import com.example.chessAI.Color;
+import com.example.chessAI.GameMode;
 import com.example.chessAI.Move;
 import com.example.chessAI.MoveGenerator;
 import com.example.chessAI.MoveValidator;
 import com.example.chessAI.Piece;
+import com.example.chessAI.PieceType;
+import com.example.chessAI.ai.AiDifficulty;
+import com.example.chessAI.ai.ChessEngineAdapter;
+import com.example.chessAI.ai.ChessEngineException;
+import com.example.chessAI.ai.LocalChessEngineAdapter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,28 +19,47 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class BoardPanel extends JPanel {
 
     public static final int BOARD_SIZE = 8;
+    public static final int AI_VISUAL_DELAY_MILLIS = 250;
 
     private final SquarePanel[][] squares;
     private final ChessBoard board;
     private final MoveGenerator moveGenerator;
     private final MoveValidator moveValidator;
     private final List<Move> selectedLegalMoves;
+    private ChessEngineAdapter chessEngine;
 
     private int selectedRow = -1;
     private int selectedCol = -1;
     private boolean gameOver;
+    private boolean aiThinking;
+    private boolean engineReady;
     private JLabel statusLabel;
+    private GameMode gameMode = GameMode.HUMAN_VS_HUMAN;
+    private AiDifficulty aiDifficulty = AiDifficulty.HARD;
+    private Color humanColor = Color.WHITE;
+    private String gameId = UUID.randomUUID().toString();
+    private String engineError;
+    private SwingWorker<Move, Void> aiWorker;
+    private boolean engineDisposed;
+    private Timer aiDelayTimer;
+    private String activeAiRequestId;
 
     public BoardPanel() {
+        this(new LocalChessEngineAdapter());
+    }
+
+    public BoardPanel(ChessEngineAdapter chessEngine) {
         squares = new SquarePanel[BOARD_SIZE][BOARD_SIZE];
         board = new ChessBoard();
         moveGenerator = new MoveGenerator();
         moveValidator = new MoveValidator();
         selectedLegalMoves = new ArrayList<Move>();
+        this.chessEngine = chessEngine;
         PieceImages.loadImages();
         initializeBoard();
         updateBoard();
@@ -61,20 +86,45 @@ public class BoardPanel extends JPanel {
         }
     }
 
-    public void setStatusLabel(JLabel statusLabel) {
-        this.statusLabel = statusLabel;
+    public void setStatusLabel(JLabel statusLabel) { this.statusLabel = statusLabel; updateStatus(); }
+    public ChessBoard getChessBoard() { return board; }
+    public GameMode getGameMode() { return gameMode; }
+    public AiDifficulty getAiDifficulty() { return aiDifficulty; }
+    public Color getHumanColor() { return humanColor; }
+    public boolean isAiThinking() { return aiThinking; }
+    public boolean isEngineReady() { return engineReady; }
+    public boolean isGameOver() { return gameOver; }
+    public String getEngineError() { return engineError; }
+    public String getGameId() { return gameId; }
+
+    public SquarePanel getSquare(int row, int col) {
+        if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) { return null; }
+        return squares[row][col];
+    }
+
+    public void setGameMode(GameMode gameMode) {
+        if (gameMode == null || this.gameMode == gameMode) { return; }
+        this.gameMode = gameMode;
+        resetBoard();
+        if (gameMode == GameMode.HUMAN_VS_AI) { ensureEngineReady(); scheduleAiTurnIfNeeded(); }
+        else { disposeEngine(); }
         updateStatus();
     }
 
-    public ChessBoard getChessBoard() {
-        return board;
+    public void setAiDifficulty(AiDifficulty aiDifficulty) {
+        if (aiDifficulty == null) { return; }
+        cancelPendingAi();
+        this.aiDifficulty = aiDifficulty;
+        invalidateGameId();
+        updateStatus();
+        scheduleAiTurnIfNeeded();
     }
 
-    public SquarePanel getSquare(int row, int col) {
-        if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) {
-            return null;
-        }
-        return squares[row][col];
+    public void setHumanColor(Color humanColor) {
+        if (humanColor == null || this.humanColor == humanColor) { return; }
+        this.humanColor = humanColor;
+        resetBoard();
+        scheduleAiTurnIfNeeded();
     }
 
     public void clearHighlights() {
@@ -89,23 +139,44 @@ public class BoardPanel extends JPanel {
 
     public void highlightSquare(int row, int col) {
         SquarePanel square = getSquare(row, col);
-        if (square != null) {
-            square.setHighlighted(true);
-        }
+        if (square != null) { square.setHighlighted(true); }
         repaint();
     }
 
     public void resetBoard() {
+        cancelPendingAi();
         board.initializeBoard();
         gameOver = false;
+        engineError = null;
+        invalidateGameId();
         clearSelection();
+        if (gameMode == GameMode.HUMAN_VS_AI) {
+            ensureEngineReady();
+            try { chessEngine.startNewGame(); } catch (ChessEngineException e) { engineError = e.getMessage(); }
+        }
         updateBoard();
-        updateStatus();
+        updateGameState();
+        scheduleAiTurnIfNeeded();
     }
 
-    public void refreshBoard() {
+    public void undoMove() {
+        cancelPendingAi();
+        if (gameMode == GameMode.HUMAN_VS_AI) {
+            board.undoMove();
+            board.undoMove();
+        } else {
+            board.undoMove();
+        }
+        gameOver = false;
+        engineError = null;
+        invalidateGameId();
+        clearSelection();
         updateBoard();
+        updateGameState();
+        scheduleAiTurnIfNeeded();
     }
+
+    public void refreshBoard() { updateBoard(); }
 
     public void updateBoard() {
         for (int row = 0; row < BOARD_SIZE; row++) {
@@ -118,24 +189,39 @@ public class BoardPanel extends JPanel {
         repaint();
     }
 
-    private void handleSquareClick(int row, int col) {
-        if (gameOver) {
-            return;
+    public boolean attemptMove(Move move) {
+        if (!canHumanInteract() || move == null || !moveValidator.isValidMove(board, move)) { return false; }
+        Move legalMove = findMatchingLegalMove(move);
+        if (legalMove == null) { return false; }
+        if (legalMove.isPromotion()) {
+            legalMove.setPromotionPiece(resolvePromotionPiece(move.getPromotionPiece()));
         }
+        board.makeMove(legalMove);
+        clearSelection();
+        updateBoard();
+        updateGameState();
+        scheduleAiTurnIfNeeded();
+        return true;
+    }
+
+    private void handleSquareClick(int row, int col) {
+        if (!canHumanInteract()) { return; }
 
         Piece clickedPiece = board.getPiece(row, col);
         if (selectedRow >= 0) {
             Move selectedMove = findSelectedMove(row, col);
-            if (selectedMove != null && moveValidator.isValidMove(board, selectedMove)) {
-                board.makeMove(selectedMove);
-                clearSelection();
-                updateBoard();
-                updateGameState();
+            if (selectedMove != null) {
+                if (selectedMove.isPromotion()) {
+                    selectedMove.setPromotionPiece(showPromotionDialog());
+                }
+                attemptMove(selectedMove);
                 return;
             }
         }
 
-        if (clickedPiece != null && clickedPiece.getColor() == board.getSideToMove()) {
+        if (clickedPiece != null
+                && clickedPiece.getColor() == board.getSideToMove()
+                && isHumanControlled(clickedPiece.getColor())) {
             selectSquare(row, col);
         } else {
             clearSelection();
@@ -144,35 +230,73 @@ public class BoardPanel extends JPanel {
         }
     }
 
+    private boolean canHumanInteract() {
+        return !gameOver && !aiThinking && engineError == null && isHumanControlled(board.getSideToMove());
+    }
+
+    private boolean isHumanControlled(Color color) {
+        return gameMode == GameMode.HUMAN_VS_HUMAN || color == humanColor;
+    }
+
     private void selectSquare(int row, int col) {
         clearSelection();
         selectedRow = row;
         selectedCol = col;
         squares[row][col].setSelected(true);
         selectedLegalMoves.addAll(getLegalMovesFrom(row, col));
-        for (Move move : selectedLegalMoves) {
-            highlightSquare(move.getToRow(), move.getToCol());
-        }
+        for (Move move : selectedLegalMoves) { highlightSquare(move.getToRow(), move.getToCol()); }
         updateStatus();
     }
 
     private List<Move> getLegalMovesFrom(int row, int col) {
         List<Move> moves = new ArrayList<Move>();
         for (Move move : moveGenerator.generateLegalMoves(board, board.getSideToMove())) {
-            if (move.getFromRow() == row && move.getFromCol() == col) {
-                moves.add(move);
-            }
+            if (move.getFromRow() == row && move.getFromCol() == col) { moves.add(move); }
         }
         return moves;
     }
 
     private Move findSelectedMove(int row, int col) {
         for (Move move : selectedLegalMoves) {
-            if (move.getToRow() == row && move.getToCol() == col) {
-                return move;
-            }
+            if (move.getToRow() == row && move.getToCol() == col) { return move; }
         }
         return null;
+    }
+
+    private Move findMatchingLegalMove(Move requestedMove) {
+        for (Move legalMove : moveGenerator.generateLegalMoves(board, board.getSideToMove())) {
+            if (sameCoordinates(legalMove, requestedMove)) { return legalMove; }
+        }
+        return null;
+    }
+
+    private boolean sameCoordinates(Move left, Move right) {
+        return left.getFromRow() == right.getFromRow()
+                && left.getFromCol() == right.getFromCol()
+                && left.getToRow() == right.getToRow()
+                && left.getToCol() == right.getToCol();
+    }
+
+    private PieceType resolvePromotionPiece(PieceType requested) {
+        if (requested == PieceType.QUEEN || requested == PieceType.ROOK
+                || requested == PieceType.BISHOP || requested == PieceType.KNIGHT) {
+            return requested;
+        }
+        return showPromotionDialog();
+    }
+
+    private PieceType showPromotionDialog() {
+        if (GraphicsEnvironment.isHeadless()) { return PieceType.QUEEN; }
+        PieceType[] choices = {PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT};
+        PieceType selected = (PieceType) JOptionPane.showInputDialog(
+                this,
+                "Choose promotion piece:",
+                "Pawn Promotion",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                choices,
+                PieceType.QUEEN);
+        return selected == null ? PieceType.QUEEN : selected;
     }
 
     private void clearSelection() {
@@ -185,14 +309,126 @@ public class BoardPanel extends JPanel {
     private void updateGameState() {
         Color turn = board.getSideToMove();
         List<Move> legalMoves = moveGenerator.generateLegalMoves(board, turn);
-        if (legalMoves.isEmpty()) {
-            gameOver = true;
-        }
+        gameOver = legalMoves.isEmpty() || board.getHalfMoveClock() >= 100;
         updateStatus();
     }
 
+    private void scheduleAiTurnIfNeeded() {
+        if (gameMode != GameMode.HUMAN_VS_AI || gameOver || aiThinking || engineError != null) { return; }
+        if (board.getSideToMove() == humanColor) { return; }
+        if (moveGenerator.generateLegalMoves(board, board.getSideToMove()).isEmpty()) { return; }
+
+        ensureEngineReady();
+        if (engineError != null) { updateStatus(); return; }
+
+        final String requestGameId = gameId;
+        final String requestId = UUID.randomUUID().toString();
+        activeAiRequestId = requestId;
+        aiThinking = true;
+        clearSelection();
+        updateStatus();
+
+        aiWorker = new SwingWorker<Move, Void>() {
+            @Override
+            protected Move doInBackground() throws Exception {
+                return chessEngine.getBestMove(board, board.getSideToMove(), aiDifficulty, requestGameId);
+            }
+
+            @Override
+            protected void done() {
+                if (!isCurrentAiRequest(requestGameId, requestId)) { return; }
+                try {
+                    final Move bestMove = get();
+                    aiDelayTimer = new Timer(AI_VISUAL_DELAY_MILLIS, e -> applyAiMove(bestMove, requestGameId, requestId));
+                    aiDelayTimer.setRepeats(false);
+                    aiDelayTimer.start();
+                } catch (Exception e) {
+                    if (isCurrentAiRequest(requestGameId, requestId)) {
+                        aiThinking = false;
+                        engineError = "Computer move failed. Start a new game to try again.";
+                        updateStatus();
+                    }
+                }
+            }
+        };
+        aiWorker.execute();
+    }
+
+    private void applyAiMove(Move bestMove, String requestGameId, String requestId) {
+        if (!isCurrentAiRequest(requestGameId, requestId)) { return; }
+        aiThinking = false;
+        activeAiRequestId = null;
+        if (bestMove == null) {
+            updateGameState();
+            return;
+        }
+        if (!moveValidator.isValidMove(board, bestMove)) {
+            engineError = "Computer returned an illegal move. Start a new game to try again.";
+            chessEngine.stop();
+            updateStatus();
+            return;
+        }
+        Move legalMove = findMatchingLegalMove(bestMove);
+        if (legalMove == null) {
+            engineError = "Computer returned an unavailable move. Start a new game to try again.";
+            updateStatus();
+            return;
+        }
+        if (legalMove.isPromotion()) { legalMove.setPromotionPiece(resolvePromotionPiece(bestMove.getPromotionPiece())); }
+        board.makeMove(legalMove);
+        updateBoard();
+        updateGameState();
+    }
+
+    private boolean isCurrentAiRequest(String requestGameId, String requestId) {
+        return requestGameId.equals(gameId)
+                && requestId.equals(activeAiRequestId)
+                && gameMode == GameMode.HUMAN_VS_AI;
+    }
+
+    private void ensureEngineReady() {
+        if (engineDisposed && chessEngine instanceof LocalChessEngineAdapter) {
+            chessEngine = new LocalChessEngineAdapter();
+            engineDisposed = false;
+        }
+        try {
+            chessEngine.initialize();
+            engineReady = true;
+            engineDisposed = false;
+            engineError = null;
+        } catch (ChessEngineException e) {
+            engineReady = false;
+            engineError = "Computer engine failed to start: " + e.getMessage();
+        }
+    }
+
+    private void cancelPendingAi() {
+        if (aiDelayTimer != null) { aiDelayTimer.stop(); aiDelayTimer = null; }
+        if (aiWorker != null && !aiWorker.isDone()) { aiWorker.cancel(true); }
+        if (chessEngine != null) { chessEngine.stop(); }
+        aiThinking = false;
+        activeAiRequestId = null;
+    }
+
+    public void disposeEngine() {
+        cancelPendingAi();
+        if (chessEngine != null) { chessEngine.dispose(); }
+        engineDisposed = true;
+        engineReady = false;
+    }
+
+    @Override
+    public void removeNotify() {
+        disposeEngine();
+        super.removeNotify();
+    }
+
+    private void invalidateGameId() { gameId = UUID.randomUUID().toString(); }
+
     private void updateStatus() {
-        if (statusLabel == null) {
+        if (statusLabel == null) { return; }
+        if (engineError != null) {
+            statusLabel.setText(engineError);
             return;
         }
         Color turn = board.getSideToMove();
@@ -203,6 +439,12 @@ public class BoardPanel extends JPanel {
             statusLabel.setText(side + " is checkmated. " + (turn.opposite() == Color.WHITE ? "White" : "Black") + " wins.");
         } else if (gameOver && noMoves) {
             statusLabel.setText("Stalemate. Game over.");
+        } else if (gameOver && board.getHalfMoveClock() >= 100) {
+            statusLabel.setText("Draw by fifty-move rule. Game over.");
+        } else if (aiThinking) {
+            statusLabel.setText("Computer is thinking…");
+        } else if (gameMode == GameMode.HUMAN_VS_AI && !engineReady && board.getSideToMove() != humanColor) {
+            statusLabel.setText("Computer engine is loading…");
         } else if (inCheck) {
             statusLabel.setText(side + " to move - check!");
         } else {
