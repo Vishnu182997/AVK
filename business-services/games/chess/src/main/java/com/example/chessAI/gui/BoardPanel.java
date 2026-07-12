@@ -31,6 +31,8 @@ public class BoardPanel extends JPanel {
     private final MoveGenerator moveGenerator;
     private final MoveValidator moveValidator;
     private final List<Move> selectedLegalMoves;
+    private final List<Move> appliedMoves;
+    private final List<String> appliedMoveAnnouncements;
     private ChessEngineAdapter chessEngine;
 
     private int selectedRow = -1;
@@ -48,6 +50,8 @@ public class BoardPanel extends JPanel {
     private boolean engineDisposed;
     private Timer aiDelayTimer;
     private String activeAiRequestId;
+    private Move lastMove;
+    private String lastMoveAnnouncement;
 
     public BoardPanel() {
         this(new LocalChessEngineAdapter());
@@ -59,6 +63,8 @@ public class BoardPanel extends JPanel {
         moveGenerator = new MoveGenerator();
         moveValidator = new MoveValidator();
         selectedLegalMoves = new ArrayList<Move>();
+        appliedMoves = new ArrayList<Move>();
+        appliedMoveAnnouncements = new ArrayList<String>();
         this.chessEngine = chessEngine;
         PieceImages.loadImages();
         initializeBoard();
@@ -96,6 +102,8 @@ public class BoardPanel extends JPanel {
     public boolean isGameOver() { return gameOver; }
     public String getEngineError() { return engineError; }
     public String getGameId() { return gameId; }
+    public Move getLastMove() { return lastMove; }
+    public String getLastMoveAnnouncement() { return lastMoveAnnouncement; }
 
     public SquarePanel getSquare(int row, int col) {
         if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) { return null; }
@@ -146,6 +154,9 @@ public class BoardPanel extends JPanel {
     public void resetBoard() {
         cancelPendingAi();
         board.initializeBoard();
+        appliedMoves.clear();
+        appliedMoveAnnouncements.clear();
+        clearLastMove();
         gameOver = false;
         engineError = null;
         invalidateGameId();
@@ -155,23 +166,25 @@ public class BoardPanel extends JPanel {
             try { chessEngine.startNewGame(); } catch (ChessEngineException e) { engineError = e.getMessage(); }
         }
         updateBoard();
+        updateLastMoveAfterUndo();
         updateGameState();
         scheduleAiTurnIfNeeded();
     }
 
     public void undoMove() {
         cancelPendingAi();
-        if (gameMode == GameMode.HUMAN_VS_AI) {
+        int movesToUndo = gameMode == GameMode.HUMAN_VS_AI ? 2 : 1;
+        for (int i = 0; i < movesToUndo; i++) {
             board.undoMove();
-            board.undoMove();
-        } else {
-            board.undoMove();
+            if (!appliedMoves.isEmpty()) { appliedMoves.remove(appliedMoves.size() - 1); }
+            if (!appliedMoveAnnouncements.isEmpty()) { appliedMoveAnnouncements.remove(appliedMoveAnnouncements.size() - 1); }
         }
         gameOver = false;
         engineError = null;
         invalidateGameId();
         clearSelection();
         updateBoard();
+        updateLastMoveAfterUndo();
         updateGameState();
         scheduleAiTurnIfNeeded();
     }
@@ -196,12 +209,60 @@ public class BoardPanel extends JPanel {
         if (legalMove.isPromotion()) {
             legalMove.setPromotionPiece(resolvePromotionPiece(move.getPromotionPiece()));
         }
+        applyLegalMove(legalMove, false);
+        scheduleAiTurnIfNeeded();
+        return true;
+    }
+
+    private void applyLegalMove(Move legalMove, boolean computerMove) {
+        Color mover = board.getSideToMove();
         board.makeMove(legalMove);
+        appliedMoves.add(legalMove);
+        String announcement = completedMoveAnnouncement(mover, legalMove, computerMove);
+        appliedMoveAnnouncements.add(announcement);
+        lastMove = legalMove;
+        lastMoveAnnouncement = announcement;
+        updateLastMoveSquares();
         clearSelection();
         updateBoard();
         updateGameState();
-        scheduleAiTurnIfNeeded();
-        return true;
+    }
+
+    private void updateLastMoveAfterUndo() {
+        lastMove = appliedMoves.isEmpty() ? null : appliedMoves.get(appliedMoves.size() - 1);
+        lastMoveAnnouncement = appliedMoveAnnouncements.isEmpty()
+                ? null
+                : appliedMoveAnnouncements.get(appliedMoveAnnouncements.size() - 1);
+        updateLastMoveSquares();
+    }
+
+    private void clearLastMove() {
+        lastMove = null;
+        lastMoveAnnouncement = null;
+        updateLastMoveSquares();
+    }
+
+    private void updateLastMoveSquares() {
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                squares[row][col].setLastMoveFrom(lastMove != null
+                        && lastMove.getFromRow() == row
+                        && lastMove.getFromCol() == col);
+                squares[row][col].setLastMoveTo(lastMove != null
+                        && lastMove.getToRow() == row
+                        && lastMove.getToCol() == col);
+            }
+        }
+    }
+
+    private String completedMoveAnnouncement(Color mover, Move move, boolean computerMove) {
+        String actor = computerMove ? "Computer" : (mover == Color.WHITE ? "White" : "Black");
+        return actor + " moved from " + squareName(move.getFromRow(), move.getFromCol())
+                + " to " + squareName(move.getToRow(), move.getToCol()) + ".";
+    }
+
+    private String squareName(int row, int col) {
+        return String.valueOf((char) ('a' + col)) + (8 - row);
     }
 
     private void handleSquareClick(int row, int col) {
@@ -375,9 +436,7 @@ public class BoardPanel extends JPanel {
             return;
         }
         if (legalMove.isPromotion()) { legalMove.setPromotionPiece(resolvePromotionPiece(bestMove.getPromotionPiece())); }
-        board.makeMove(legalMove);
-        updateBoard();
-        updateGameState();
+        applyLegalMove(legalMove, true);
     }
 
     private boolean isCurrentAiRequest(String requestGameId, String requestId) {
@@ -425,10 +484,15 @@ public class BoardPanel extends JPanel {
 
     private void invalidateGameId() { gameId = UUID.randomUUID().toString(); }
 
+    private String withLastMoveAnnouncement(String status) {
+        return lastMoveAnnouncement == null ? status : lastMoveAnnouncement + " " + status;
+    }
+
     private void updateStatus() {
         if (statusLabel == null) { return; }
+        statusLabel.getAccessibleContext().setAccessibleDescription(lastMoveAnnouncement);
         if (engineError != null) {
-            statusLabel.setText(engineError);
+            statusLabel.setText(withLastMoveAnnouncement(engineError));
             return;
         }
         Color turn = board.getSideToMove();
@@ -436,19 +500,19 @@ public class BoardPanel extends JPanel {
         boolean noMoves = moveGenerator.generateLegalMoves(board, turn).isEmpty();
         String side = turn == Color.WHITE ? "White" : "Black";
         if (gameOver && inCheck && noMoves) {
-            statusLabel.setText(side + " is checkmated. " + (turn.opposite() == Color.WHITE ? "White" : "Black") + " wins.");
+            statusLabel.setText(withLastMoveAnnouncement(side + " is checkmated. " + (turn.opposite() == Color.WHITE ? "White" : "Black") + " wins."));
         } else if (gameOver && noMoves) {
-            statusLabel.setText("Stalemate. Game over.");
+            statusLabel.setText(withLastMoveAnnouncement("Stalemate. Game over."));
         } else if (gameOver && board.getHalfMoveClock() >= 100) {
-            statusLabel.setText("Draw by fifty-move rule. Game over.");
+            statusLabel.setText(withLastMoveAnnouncement("Draw by fifty-move rule. Game over."));
         } else if (aiThinking) {
-            statusLabel.setText("Computer is thinking…");
+            statusLabel.setText(withLastMoveAnnouncement("Computer is thinking…"));
         } else if (gameMode == GameMode.HUMAN_VS_AI && !engineReady && board.getSideToMove() != humanColor) {
-            statusLabel.setText("Computer engine is loading…");
+            statusLabel.setText(withLastMoveAnnouncement("Computer engine is loading…"));
         } else if (inCheck) {
-            statusLabel.setText(side + " to move - check!");
+            statusLabel.setText(withLastMoveAnnouncement(side + " to move - check!"));
         } else {
-            statusLabel.setText(side + " to move");
+            statusLabel.setText(withLastMoveAnnouncement(side + " to move"));
         }
     }
 }
