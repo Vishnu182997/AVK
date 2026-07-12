@@ -133,7 +133,15 @@ public class Game {
 
 
 
-        board.makeMove(move);
+        MoveValidator validator = new MoveValidator();
+        Move legalMove = validator.getLegalMove(board, move);
+        if(legalMove == null) {
+
+            return false;
+        }
+
+
+        board.makeMove(legalMove);
 
 
 
@@ -264,6 +272,15 @@ public class Game {
 
 
         if(!gameOver) {
+
+            return null;
+        }
+
+
+        MoveValidator validator = new MoveValidator();
+
+
+        if(!validator.isCheck(board, board.getSideToMove())) {
 
             return null;
         }

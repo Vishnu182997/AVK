@@ -35,6 +35,7 @@ public class ChessGUI extends JFrame {
         boardPanel = new BoardPanel();
 
         statusLabel = new JLabel("White to Move");
+        boardPanel.setStatusListener(status -> statusLabel.setText(status));
         statusLabel.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
         add(boardPanel, BorderLayout.CENTER);
@@ -112,7 +113,6 @@ public class ChessGUI extends JFrame {
     public void startNewGame() {
 
         boardPanel.resetBoard();
-        statusLabel.setText("White to Move");
     }
 
     /**

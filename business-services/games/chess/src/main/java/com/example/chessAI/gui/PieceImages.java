@@ -6,16 +6,22 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.chessAI.Piece;
+
 public final class PieceImages {
 
     private static final String PATH = "/piece_images/";
-
-    private static final Map<String, ImageIcon> images = new HashMap<>();
+    private static final Map<String, ImageIcon> images = new HashMap<String, ImageIcon>();
+    private static boolean loaded;
 
     private PieceImages() {
     }
 
     public static void loadImages() {
+
+        if (loaded) {
+            return;
+        }
 
         images.put("WHITE_PAWN", load("white_pawn.png"));
         images.put("WHITE_ROOK", load("white_rook.png"));
@@ -30,6 +36,8 @@ public final class PieceImages {
         images.put("BLACK_BISHOP", load("black_bishop.png"));
         images.put("BLACK_QUEEN", load("black_queen.png"));
         images.put("BLACK_KING", load("black_king.png"));
+
+        loaded = true;
     }
 
     private static ImageIcon load(String fileName) {
@@ -37,7 +45,7 @@ public final class PieceImages {
         URL url = PieceImages.class.getResource(PATH + fileName);
 
         if (url == null) {
-            System.err.println("Image not found: " + fileName);
+            System.err.println("Image not found on classpath, using Unicode fallback: " + PATH + fileName);
             return null;
         }
 
@@ -45,6 +53,16 @@ public final class PieceImages {
     }
 
     public static ImageIcon get(String key) {
+        loadImages();
         return images.get(key);
+    }
+
+    public static ImageIcon get(Piece piece) {
+
+        if (piece == null) {
+            return null;
+        }
+
+        return get(piece.getColor().name() + "_" + piece.getType().name());
     }
 }

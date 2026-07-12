@@ -56,20 +56,49 @@ public class MoveValidator {
             return false;
         }
 
-        // Generate legal moves
-        List<Move> legalMoves =
-                moveGenerator.generateLegalMoves(
-                        board,
-                        piece.getColor());
+        return getLegalMove(board, move) != null;
+    }
+
+    /**
+     * Returns the generated legal move matching the requested coordinates,
+     * preserving special-move flags such as castling, en passant, and promotion.
+     */
+    public Move getLegalMove(ChessBoard board, Move move) {
+
+        if (board == null || move == null) {
+            return null;
+        }
+
+        if (!insideBoard(move.getFromRow(), move.getFromCol())
+                || !insideBoard(move.getToRow(), move.getToCol())) {
+            return null;
+        }
+
+        Piece piece = board.getPiece(move.getFromRow(), move.getFromCol());
+
+        if (piece == null || piece.getColor() != board.getSideToMove()) {
+            return null;
+        }
+
+        Piece destination = board.getPiece(move.getToRow(), move.getToCol());
+
+        if (destination != null && destination.getColor() == piece.getColor()) {
+            return null;
+        }
+
+        List<Move> legalMoves = moveGenerator.generateLegalMoves(board, piece.getColor());
 
         for (Move legal : legalMoves) {
-
             if (sameMove(legal, move)) {
-                return true;
+                if (move.getPromotionPiece() != null) {
+                    legal.setPromotionPiece(move.getPromotionPiece());
+                }
+
+                return legal;
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
