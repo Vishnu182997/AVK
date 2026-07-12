@@ -1,5 +1,7 @@
 package com.example.chessAI.gui;
 
+import com.example.chessAI.Piece;
+
 import javax.swing.*;
 
 import java.net.URL;
@@ -16,6 +18,10 @@ public final class PieceImages {
     }
 
     public static void loadImages() {
+
+        if (!images.isEmpty()) {
+            return;
+        }
 
         images.put("WHITE_PAWN", load("white_pawn.png"));
         images.put("WHITE_ROOK", load("white_rook.png"));
@@ -46,5 +52,12 @@ public final class PieceImages {
 
     public static ImageIcon get(String key) {
         return images.get(key);
+    }
+
+    public static ImageIcon get(Piece piece) {
+        if (piece == null) {
+            return null;
+        }
+        return get(piece.getColor().name() + "_" + piece.getType().name());
     }
 }
