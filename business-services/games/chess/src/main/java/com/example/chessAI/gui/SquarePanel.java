@@ -14,6 +14,8 @@ public class SquarePanel extends JPanel {
     private final boolean lightSquare;
     private boolean highlighted;
     private boolean selected;
+    private boolean lastMoveFrom;
+    private boolean lastMoveTo;
     private ImageIcon pieceIcon;
     private Piece piece;
 
@@ -23,6 +25,8 @@ public class SquarePanel extends JPanel {
         this.lightSquare = lightSquare;
         this.highlighted = false;
         this.selected = false;
+        this.lastMoveFrom = false;
+        this.lastMoveTo = false;
         initialize();
     }
 
@@ -61,6 +65,24 @@ public class SquarePanel extends JPanel {
         return highlighted;
     }
 
+    public void setLastMoveFrom(boolean lastMoveFrom) {
+        this.lastMoveFrom = lastMoveFrom;
+        repaint();
+    }
+
+    public boolean isLastMoveFrom() {
+        return lastMoveFrom;
+    }
+
+    public void setLastMoveTo(boolean lastMoveTo) {
+        this.lastMoveTo = lastMoveTo;
+        repaint();
+    }
+
+    public boolean isLastMoveTo() {
+        return lastMoveTo;
+    }
+
     public void setSelected(boolean selected) {
         this.selected = selected;
         updateSquareColor();
@@ -90,12 +112,32 @@ public class SquarePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        paintLastMoveHint(g);
         if (pieceIcon != null) {
             Image image = pieceIcon.getImage();
             g.drawImage(image, 5, 5, getWidth() - 10, getHeight() - 10, this);
         } else if (piece != null) {
             drawUnicodePiece(g);
         }
+    }
+
+    private void paintLastMoveHint(Graphics g) {
+        if (!lastMoveFrom && !lastMoveTo) { return; }
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        java.awt.Color fill = lastMoveTo
+                ? new java.awt.Color(255, 214, 10, 115)
+                : new java.awt.Color(255, 238, 88, 75);
+        g2.setColor(fill);
+        g2.fillRect(0, 0, getWidth(), getHeight());
+        g2.setColor(lastMoveTo
+                ? new java.awt.Color(255, 143, 0, 210)
+                : new java.awt.Color(255, 193, 7, 180));
+        int strokeWidth = lastMoveTo ? 4 : 2;
+        g2.setStroke(new BasicStroke(strokeWidth));
+        int inset = strokeWidth;
+        g2.drawRect(inset, inset, getWidth() - (inset * 2) - 1, getHeight() - (inset * 2) - 1);
+        g2.dispose();
     }
 
     private void drawUnicodePiece(Graphics g) {
