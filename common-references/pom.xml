@@ -21,6 +21,6 @@
 	</properties>
 
 	<modules>
-		
+		<module>app-common-services</module>
 	</modules>
 </project>
