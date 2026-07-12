@@ -18,7 +18,7 @@ public class GamePanel extends JPanel implements Runnable {
 	// ==========================
 	// Game Objects
 	// ==========================
-	private Thread gameThread;
+	private volatile Thread gameThread;
 
 	private final KeyHandler keyHandler;
 	private final Board board;
@@ -30,6 +30,7 @@ public class GamePanel extends JPanel implements Runnable {
 	// Game State
 	// ==========================
 	private boolean gameOver = false;
+	private boolean paused = false;
 
 	private int score = 0;
 	private int level = 1;
@@ -59,8 +60,24 @@ public class GamePanel extends JPanel implements Runnable {
 	// ==========================
 	public void startGameThread() {
 
-		gameThread = new Thread(this);
+		if (gameThread != null) {
+			return;
+		}
+
+		gameThread = new Thread(this, "TetrisGameLoop");
 		gameThread.start();
+	}
+
+	public void stopGameThread() {
+
+		gameThread = null;
+	}
+
+	@Override
+	public void removeNotify() {
+
+		stopGameThread();
+		super.removeNotify();
 	}
 
 	// ==========================
@@ -108,7 +125,9 @@ public class GamePanel extends JPanel implements Runnable {
 	// ==========================
 	private void update() {
 
-		if (gameOver) {
+		handleGameControls();
+
+		if (gameOver || paused) {
 			return;
 		}
 
@@ -122,6 +141,35 @@ public class GamePanel extends JPanel implements Runnable {
 
 			fallCounter = 0;
 		}
+	}
+
+	private void handleGameControls() {
+
+		if (keyHandler.restartPressed) {
+			restartGame();
+			keyHandler.restartPressed = false;
+		}
+
+		if (keyHandler.pausePressed && !gameOver) {
+			paused = !paused;
+			keyHandler.clearGameplayInput();
+			keyHandler.pausePressed = false;
+		}
+	}
+
+	private void restartGame() {
+
+		board.reset();
+		currentPiece = PieceFactory.getRandomPiece(TILE_SIZE);
+		nextPiece = PieceFactory.getRandomPiece(TILE_SIZE);
+		gameOver = false;
+		paused = false;
+		score = 0;
+		level = 1;
+		totalLines = 0;
+		fallCounter = 0;
+		fallSpeed = 30;
+		keyHandler.clearGameplayInput();
 	}
 
 	private void handleInput() {
@@ -156,11 +204,7 @@ public class GamePanel extends JPanel implements Runnable {
 			currentPiece.rotate();
 
 			if (!board.canPlace(currentPiece)) {
-
-				// Undo rotation (3 more rotations)
-				currentPiece.rotate();
-				currentPiece.rotate();
-				currentPiece.rotate();
+				currentPiece.rotateBack();
 			}
 
 			keyHandler.rotatePressed = false;
@@ -217,36 +261,30 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 	}
 	
-//	@Override
-//	protected void paintComponent(Graphics g) {
-//
-//	    super.paintComponent(g);
-//
-//	    Graphics2D g2 = (Graphics2D) g;
-//
-//	    board.draw(g2);
-//
-//	    if (currentPiece != null) {
-//	        currentPiece.draw(g2);
-//	    }
-//
-//	    drawSidePanel(g2);
-//
-//	    if (gameOver) {
-//	        drawGameOver(g2);
-//	    }
-//
-//	    g2.dispose();
-//	}
-	
 	@Override
 	protected void paintComponent(Graphics g) {
 
-	    super.paintComponent(g);
+		super.paintComponent(g);
 
-	    board.draw(g);          // Draw all locked pieces
+		Graphics2D g2 = (Graphics2D) g.create();
 
-	    currentPiece.draw(g);   // Draw only the falling piece
+		board.draw(g2);
+
+		if (currentPiece != null) {
+			currentPiece.draw(g2);
+		}
+
+		drawSidePanel(g2);
+
+		if (paused && !gameOver) {
+			drawCenteredMessage(g2, "PAUSED", Color.WHITE);
+		}
+
+		if (gameOver) {
+			drawGameOver(g2);
+		}
+
+		g2.dispose();
 	}
 	
 	private void drawSidePanel(Graphics2D g) {
@@ -269,6 +307,14 @@ public class GamePanel extends JPanel implements Runnable {
 	    g.drawString("Next", x, 290);
 
 	    drawNextPiece(g, x, 320);
+
+	    g.setFont(new Font("Arial", Font.PLAIN, 13));
+	    g.setColor(Color.LIGHT_GRAY);
+	    g.drawString("←/→ Move", x, 455);
+	    g.drawString("↓ Soft drop", x, 475);
+	    g.drawString("↑/Space Rotate", x, 495);
+	    g.drawString("P Pause", x, 515);
+	    g.drawString("R Restart", x, 535);
 	}
 	
 	private void drawNextPiece(Graphics2D g, int startX, int startY) {
@@ -301,6 +347,17 @@ public class GamePanel extends JPanel implements Runnable {
 	    }
 	}
 	
+	private void drawCenteredMessage(Graphics2D g, String text, Color color) {
+
+		g.setColor(new Color(0, 0, 0, 180));
+		g.fillRect(0, 0, WIDTH, HEIGHT);
+		g.setColor(color);
+		g.setFont(new Font("Arial", Font.BOLD, 42));
+		FontMetrics fm = g.getFontMetrics();
+		int x = (WIDTH - fm.stringWidth(text)) / 2;
+		g.drawString(text, x, HEIGHT / 2);
+	}
+
 	private void drawGameOver(Graphics2D g) {
 
 	    g.setColor(new Color(0, 0, 0, 180));

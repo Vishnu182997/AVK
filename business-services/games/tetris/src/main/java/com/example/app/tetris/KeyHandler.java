@@ -8,6 +8,8 @@ public class KeyHandler implements KeyListener {
     public boolean rightPressed;
     public boolean downPressed;
     public boolean rotatePressed;
+    public boolean pausePressed;
+    public boolean restartPressed;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -27,7 +29,16 @@ public class KeyHandler implements KeyListener {
                 break;
 
             case KeyEvent.VK_UP:
+            case KeyEvent.VK_SPACE:
                 rotatePressed = true;
+                break;
+
+            case KeyEvent.VK_P:
+                pausePressed = true;
+                break;
+
+            case KeyEvent.VK_R:
+                restartPressed = true;
                 break;
         }
     }
@@ -50,9 +61,17 @@ public class KeyHandler implements KeyListener {
                 break;
 
             case KeyEvent.VK_UP:
+            case KeyEvent.VK_SPACE:
                 rotatePressed = false;
                 break;
         }
+    }
+
+    public void clearGameplayInput() {
+        leftPressed = false;
+        rightPressed = false;
+        downPressed = false;
+        rotatePressed = false;
     }
 
     @Override
