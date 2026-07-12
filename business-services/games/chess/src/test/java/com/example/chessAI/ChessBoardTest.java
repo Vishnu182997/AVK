@@ -1,13 +1,21 @@
 package com.example.chessAI;
 
-import com.example.chessAI.pieces.King;
-import com.example.chessAI.pieces.Pawn;
-import com.example.chessAI.pieces.Rook;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import com.example.chessAI.pieces.Bishop;
+import com.example.chessAI.pieces.King;
+import com.example.chessAI.pieces.Knight;
+import com.example.chessAI.pieces.Pawn;
+import com.example.chessAI.pieces.Queen;
+import com.example.chessAI.pieces.Rook;
 
 class ChessBoardTest {
 
