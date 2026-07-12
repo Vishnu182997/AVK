@@ -10,27 +10,36 @@ public class MoveGenerator {
      */
     public List<Move> generateLegalMoves(ChessBoard board, Color color) {
 
-        List<Move> moves = new ArrayList<Move>();
+        List<Move> legalMoves = new ArrayList<Move>();
 
+        for (Move move : generatePseudoLegalMoves(board, color)) {
+            board.makeMove(move);
+            if (!board.isKingInCheck(color)) {
+                legalMoves.add(move);
+            }
+            board.undoMove();
+        }
+
+        return legalMoves;
+    }
+
+    /**
+     * Generates moves that obey piece movement rules before king-safety filtering.
+     */
+    public List<Move> generatePseudoLegalMoves(ChessBoard board, Color color) {
+
+        List<Move> moves = new ArrayList<Move>();
         Piece[][] pieces = board.getBoard();
 
         for (int row = 0; row < ChessBoard.SIZE; row++) {
-
             for (int col = 0; col < ChessBoard.SIZE; col++) {
-
                 Piece piece = pieces[row][col];
 
-                if (piece == null) {
+                if (piece == null || piece.getColor() != color) {
                     continue;
                 }
 
-                if (piece.getColor() != color) {
-                    continue;
-                }
-
-                List<Move> pieceMoves =
-                        piece.getLegalMoves(board, row, col);
-
+                List<Move> pieceMoves = piece.getLegalMoves(board, row, col);
                 if (pieceMoves != null) {
                     moves.addAll(pieceMoves);
                 }
