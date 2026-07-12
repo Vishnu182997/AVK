@@ -133,6 +133,13 @@ public class Game {
 
 
 
+        MoveValidator validator = new MoveValidator();
+        if(!validator.isValidMove(board, move)) {
+
+            return false;
+        }
+
+
         board.makeMove(move);
 
 
@@ -264,6 +271,15 @@ public class Game {
 
 
         if(!gameOver) {
+
+            return null;
+        }
+
+
+        MoveValidator validator = new MoveValidator();
+
+
+        if(!validator.isCheck(board, board.getSideToMove())) {
 
             return null;
         }

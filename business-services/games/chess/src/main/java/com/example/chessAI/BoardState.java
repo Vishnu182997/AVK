@@ -115,6 +115,15 @@ public class BoardState {
                         ? null
                         : new Position(enPassantSquare)
         );
+
+        chessBoard.setCastlingRights(
+                whiteKingSideCastle,
+                whiteQueenSideCastle,
+                blackKingSideCastle,
+                blackQueenSideCastle
+        );
+
+        chessBoard.setMoveCounters(halfMoveClock, fullMoveNumber);
     }
 
 
