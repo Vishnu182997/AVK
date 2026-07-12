@@ -1,0 +1,95 @@
+Java has been used to build many successful games, especially on PC, mobile (particularly before Android shifted toward Kotlin), browser applets, and indie titles. Here are some well-known examples:
+
+## Popular games built with Java
+
+![Image](https://images.openai.com/static-rsc-4/sKj907wHPvq-mtK_d2VvjgrUUunXqBNbovvijnZ-E_7gQM0uFwt8oWl6rZz3It6eBTO2jjEYKE8IUgp705ErZftTWCOWqwSHoGl2fyCNmCmj6ZN_YMezca2ws71iukt586fLtSLD3UGfXozWy_Fh2mH1Jg1lTxjAx-Gn0jZtLb3cz0DDh9A87sNi0IWPr4Yq?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/WIGBo5WcIFXSRKdTPiGSIT7QEAgsnZagGfz0Y75v14riLYcMiV9u1J7QV9g3HSCoKnos5M1prPrCmoeXSBNyYtjRCE4Baqo1Hukb1NbVfOaJgdUXgQqn_giPKXTndX2kJ61jyCAx09TZ-63a36hBDd83DU821reBIazA1gSoxfvVU1MaFYVzYqUtsLIRo32u?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/7TFFTJmOl1rbZUpjne5h_KyMQycGCGoDvf-m_phnbQjiJFVeAK0ZdQLoTl2ANjn_C9q3TEBe1X_ZxSQopYcDfiXAsEIQch4aa2sClRSs1R681FlovmuzwBtOlORimLcAT6hBpASMftVEHM5i8pSO4KdsVKo5n1TEqCFYjkPwgn4wO6dngej_u9x0qTMUHdZ7?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/c4XCSJzO1-nmsrlds3RH80gNYVYKQ96htEAjYsQL9McfStm6SNfOCWtTSlvOr_KthNhQ3TWlIe4wL1J6kzxHeyqacXA_-UNIauos4JgZnLnhdcV-081T4KRAeqEfgXORhg7OuuZpyusJplLvjI_U2SNNQJBPaN-1Wz0S_k_DFMtwCGlo4AiaXS7ysWZjiSjA?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/O5IMsgdjAxsUkEDWYIov-dbjXRAUKuThalPLuT_wzDLVwZo0G2v0VtDuZDdBQvmxv0fa7LnpP6azw09hioV1-COoThseoH9F9CLxzFEapCaFNe9mkOC9Go7og9SAZwKQCRR4D2z68_bOwVVLeFePwzVSHFVAeQr8pHKLcVgvFG5-ai7wehpRF09Rt17Naiet?purpose=fullsize)
+
+* Minecraft
+
+  * One of the most famous Java games ever made.
+  * Originally developed entirely in Java.
+  * Uses the LWJGL library for graphics and input.
+
+* RuneScape
+
+  * Browser-based for many years using Java applets.
+  * One of the world's longest-running MMORPGs.
+
+* Slay the Spire
+
+  * A critically acclaimed roguelike deck-building game.
+  * Built using the Java-based libGDX framework.
+
+* Wurm Online
+
+  * A sandbox MMORPG developed in Java.
+
+## Android games
+
+Since Android apps traditionally use Java, many early Android games were written in Java, such as:
+
+* Temple Run (early Android versions)
+* Subway Surfers (parts of the Android application)
+* Angry Birds (Android application layer included Java)
+
+> Note: Modern Android games often use Kotlin for the app layer and C++ (via the Android NDK) or engines like Unity or Unreal for the game itself.
+
+## Indie games using Java frameworks
+
+Many indie developers build games using Java frameworks like:
+
+* libGDX
+* jMonkeyEngine
+* LWJGL
+* FXGL
+
+Common game types include:
+
+* Platformers
+* RPGs
+* Tower defense games
+* Puzzle games
+* Multiplayer games
+* Card games
+* 2D shooters
+* 3D sandbox games
+
+## Games you can build as a Java learner
+
+If you're learning Java, these are excellent projects:
+
+| Beginner            | Intermediate   | Advanced         |
+| ------------------- | -------------- | ---------------- |
+| Tic-Tac-Toe         | Snake          | Minecraft clone  |
+| Rock Paper Scissors | Tetris         | Multiplayer game |
+| Number Guessing     | Space Invaders | 3D FPS           |
+| Hangman             | Chess          | RPG              |
+| Memory Game         | Pac-Man        | Survival game    |
+
+## Can Java make modern games?
+
+Yes. Java is capable of creating both 2D and 3D games. It's especially well-suited for:
+
+* Desktop games
+* Indie games
+* Educational games
+* Multiplayer server backends
+* Android games
+
+For large AAA games, studios more commonly use C++, Unreal Engine, or proprietary engines because they offer greater control over performance and tooling.
+
+If you're starting out with Java game development, a good progression is:
+
+1. Learn core Java (classes, objects, collections, exceptions).
+2. Build simple console games.
+3. Learn Java Swing or JavaFX for graphics.
+4. Move to a framework like libGDX for professional-style 2D games.
+5. Explore networking and game design concepts to build multiplayer games.
