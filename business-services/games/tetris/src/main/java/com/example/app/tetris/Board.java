@@ -142,7 +142,7 @@ public class Board {
 	}
 
 	// Copies the current piece into the board grid
-	public void lockPiece1(Piece piece) {
+	public void lockPiece(Piece piece) {
 
 		int[][] shape = piece.getCurrentShape();
 
@@ -157,28 +157,10 @@ public class Board {
 				int boardCol = piece.x + col;
 
 				if (boardRow >= 0 && boardRow < ROWS && boardCol >= 0 && boardCol < COLS) {
-
-					grid[boardRow][boardCol] = piece.color;
+					grid[boardRow][boardCol] = piece.getColor();
 				}
 			}
 		}
-	}
-	
-	public void lockPiece(Piece piece) {
-
-	    int[][] shape = piece.getCurrentShape();
-
-	    for (int row = 0; row < shape.length; row++) {
-
-	        for (int col = 0; col < shape[row].length; col++) {
-
-	            if (shape[row][col] == 1) {
-
-	                grid[piece.y + row][piece.x + col] = piece.getColor();
-
-	            }
-	        }
-	    }
 	}
 
 	// Clears all completed lines.
