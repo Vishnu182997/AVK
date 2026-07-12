@@ -1,9 +1,0 @@
-{
-  "stage": "eva",
-  "region": "ap-south-1",
-  "version": "v1",
-  "role": "arn:aws:iam::579204083427:role/FullAccessLambda",
-  "securityGroupIds": "sg-0ffd32b1fb700073f",
-  "privateSubnetId1": "subnet-044c987a11265a4e8",
-  "deploymentBucket": "fastcollab-lambda-bucket"
-}

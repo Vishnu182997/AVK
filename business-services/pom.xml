@@ -22,11 +22,7 @@
 	</properties>
 	
 	<dependencies>
-		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>app-common-services</artifactId>
-			<version>1.0.0</version>
-		</dependency>
+		
 	</dependencies>
 	
 	<modules>
