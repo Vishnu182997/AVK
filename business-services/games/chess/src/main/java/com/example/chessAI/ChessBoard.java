@@ -326,7 +326,7 @@ public class ChessBoard {
         this.halfMoveClock = halfMoveClock;
         this.fullMoveNumber = fullMoveNumber;
     }
-    
+
     /**
      * Returns true if the specified king is in check.
      */
@@ -433,7 +433,7 @@ public class ChessBoard {
 
         return false;
     }
-    
+
     /**
      * Finds the king position.
      */

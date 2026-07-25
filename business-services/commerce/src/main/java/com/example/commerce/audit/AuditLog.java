@@ -1,3 +1,22 @@
 package com.example.commerce.audit;
-import javax.persistence.*; import com.example.commerce.common.BaseEntity; import lombok.*;
-@Entity @Table(name="audit_log",indexes={@Index(name="ix_audit_entity",columnList="entityType,entityId"),@Index(name="ix_audit_actor",columnList="actor")}) @Getter @Setter public class AuditLog extends BaseEntity { @Column(nullable=false,length=50) private String entityType; @Column(nullable=false,length=100) private String entityId; @Column(nullable=false,length=50) private String action; @Column(length=4000) private String previousValue; @Column(length=4000) private String newValue; @Column(nullable=false,length=254) private String actor; @Column(length=100) private String correlationId; }
+import javax.persistence.*;
+import com.example.commerce.common.BaseEntity;
+import lombok.*;
+@Entity
+@Table(name = "audit_log",
+    indexes =
+    {
+      @Index(name = "ix_audit_entity", columnList = "entityType,entityId")
+      , @Index(name = "ix_audit_actor", columnList = "actor")
+    })
+@Getter
+@Setter
+public class AuditLog extends BaseEntity {
+  @Column(nullable = false, length = 50) private String entityType;
+  @Column(nullable = false, length = 100) private String entityId;
+  @Column(nullable = false, length = 50) private String action;
+  @Column(length = 4000) private String previousValue;
+  @Column(length = 4000) private String newValue;
+  @Column(nullable = false, length = 254) private String actor;
+  @Column(length = 100) private String correlationId;
+}

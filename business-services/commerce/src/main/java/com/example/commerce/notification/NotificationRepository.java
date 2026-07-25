@@ -1,1 +1,3 @@
-package com.example.commerce.notification; import org.springframework.data.jpa.repository.JpaRepository; public interface NotificationRepository extends JpaRepository<Notification,Long>{}
+package com.example.commerce.notification;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface NotificationRepository extends JpaRepository<Notification, Long> {}

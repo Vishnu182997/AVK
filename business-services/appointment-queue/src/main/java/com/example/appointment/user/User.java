@@ -1,3 +1,31 @@
 package com.example.appointment.user;
-import com.example.appointment.common.BaseEntity; import javax.persistence.*;
-@Entity @Table(name="app_user",uniqueConstraints=@UniqueConstraint(name="uk_user_email",columnNames="email")) public class User extends BaseEntity { @Column(nullable=false) private String name; @Column(nullable=false) private String email; @Column(nullable=false,name="password_hash") private String password; @Enumerated(EnumType.STRING) @Column(nullable=false) private Role role=Role.CUSTOMER; protected User(){} public User(String n,String e,String p,Role r){name=n;email=e.toLowerCase();password=p;role=r;} public String getName(){return name;} public String getEmail(){return email;} public String getPassword(){return password;} public Role getRole(){return role;} }
+import com.example.appointment.common.BaseEntity;
+import javax.persistence.*;
+@Entity
+@Table(name = "app_user",
+    uniqueConstraints = @UniqueConstraint(name = "uk_user_email", columnNames = "email"))
+public class User extends BaseEntity {
+  @Column(nullable = false) private String name;
+  @Column(nullable = false) private String email;
+  @Column(nullable = false, name = "password_hash") private String password;
+  @Enumerated(EnumType.STRING) @Column(nullable = false) private Role role = Role.CUSTOMER;
+  protected User() {}
+  public User(String n, String e, String p, Role r) {
+    name = n;
+    email = e.toLowerCase();
+    password = p;
+    role = r;
+  }
+  public String getName() {
+    return name;
+  }
+  public String getEmail() {
+    return email;
+  }
+  public String getPassword() {
+    return password;
+  }
+  public Role getRole() {
+    return role;
+  }
+}
