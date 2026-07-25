@@ -1,0 +1,1 @@
+package com.example.appointment.queue; import java.time.LocalDate; import java.util.Optional; import javax.persistence.LockModeType; import org.springframework.data.jpa.repository.*; public interface TokenSequenceRepository extends JpaRepository<TokenSequence,Long>{@Lock(LockModeType.PESSIMISTIC_WRITE) Optional<TokenSequence> findByDateAndServiceId(LocalDate d,Long s);}
