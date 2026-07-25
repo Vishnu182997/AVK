@@ -4,124 +4,128 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
-
-import org.junit.jupiter.api.*;
-
 import com.example.expense.dto.*;
 import com.example.expense.entity.*;
 import com.example.expense.exception.ExpenseException;
 import com.example.expense.model.*;
 import com.example.expense.repository.*;
 import com.example.expense.service.impl.*;
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.*;
+import org.junit.jupiter.api.*;
 
 class ExpenseServicesTest {
-    private ExpenseTransactionRepository transactions;
-    private BudgetRepository budgets;
-    private ExpenseActor actor;
-    @BeforeEach
-    void setup() {
-        transactions = mock(ExpenseTransactionRepository.class);
-        budgets = mock(BudgetRepository.class);
-        actor = new ExpenseActor("user-1");
-    }
-    @Test
-    void createsValidTransactionAndRejectsInvalidAmount() {
-        when(transactions.save(any(ExpenseTransaction.class))).thenAnswer(i -> {
-            ExpenseTransaction t = (ExpenseTransaction) i.getArguments()[0];
-            t.setId(1L);
-            return t;
-        });
-        TransactionService s = new TransactionServiceImpl(transactions);
-        assertEquals(new BigDecimal("25.00"), s.create(tx(new BigDecimal("25.00")), actor).getAmount());
-        TransactionRequest bad = tx(BigDecimal.ZERO);
-        assertEquals(400, assertThrows(ExpenseException.class, () -> s.create(bad, actor)).getStatusCode());
-    }
-    @Test
-    void updatesExistingAndHandlesMissingAndForeignTransaction() {
-        ExpenseTransaction t = entity();
-        when(transactions.findById(1L)).thenReturn(Optional.of(t));
-        when(transactions.save(t)).thenReturn(t);
-        TransactionService s = new TransactionServiceImpl(transactions);
-        assertEquals(new BigDecimal("30.00"), s.update(1L, tx(new BigDecimal("30.00")), actor).getAmount());
-        when(transactions.findById(9L)).thenReturn(Optional.empty());
-        assertEquals(404, assertThrows(ExpenseException.class, () -> s.findById(9L, actor)).getStatusCode());
-        assertEquals(403,
-                assertThrows(ExpenseException.class, () -> s.findById(1L, new ExpenseActor("other"))).getStatusCode());
-    }
-    @Test
-    void createsBudgetAndRejectsDuplicate() {
-        when(budgets.save(any(Budget.class))).thenAnswer(i -> {
-            Budget b = (Budget) i.getArguments()[0];
-            b.setId(2L);
-            return b;
-        });
-        BudgetService s = new BudgetServiceImpl(budgets);
-        assertEquals(new BigDecimal("100.00"), s.create(budget(), actor).getMonthlyLimit());
-        when(budgets.existsByUserIdAndCategoryAndMonthAndYear(
-                     anyString(), any(ExpenseCategory.class), anyInt(), anyInt()))
-                .thenReturn(true);
-        assertEquals(409, assertThrows(ExpenseException.class, () -> s.create(budget(), actor)).getStatusCode());
-    }
-    @Test
-    void reportsTotalsGroupingRemainingWarningAndExceeded() {
-        ExpenseTransaction expense = entity();
-        expense.setAmount(new BigDecimal("80"));
-        ExpenseTransaction income = entity();
-        income.setType(TransactionType.INCOME);
-        income.setAmount(new BigDecimal("200"));
-        income.setCategory(ExpenseCategory.SALARY);
-        when(transactions.findMonthly(eq("user-1"), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(Arrays.asList(expense, income));
-        Budget food = new Budget();
-        food.setCategory(ExpenseCategory.FOOD);
-        food.setMonthlyLimit(new BigDecimal("100"));
-        Budget transport = new Budget();
-        transport.setCategory(ExpenseCategory.TRANSPORTATION);
-        transport.setMonthlyLimit(new BigDecimal("50"));
-        ExpenseTransaction over = entity();
-        over.setCategory(ExpenseCategory.TRANSPORTATION);
-        over.setAmount(new BigDecimal("60"));
-        when(transactions.findMonthly(eq("user-1"), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(Arrays.asList(expense, income, over));
-        when(budgets.findByUserIdAndMonthAndYear("user-1", 7, 2026)).thenReturn(Arrays.asList(food, transport));
-        MonthlySummaryResponse r =
-                new ReportServiceImpl(transactions, budgets, new BigDecimal("80")).monthly(7, 2026, actor);
-        assertEquals(new BigDecimal("200"), r.getTotalIncome());
-        assertEquals(new BigDecimal("140"), r.getTotalExpenses());
-        assertEquals(new BigDecimal("80"), r.getExpensesByCategory().get(ExpenseCategory.FOOD));
-        assertEquals(new BigDecimal("20"), r.getCategories().get(0).getRemainingBudget());
-        assertEquals(BudgetStatus.WARNING, r.getCategories().get(0).getStatus());
-        assertEquals(BudgetStatus.EXCEEDED, r.getCategories().get(1).getStatus());
-    }
-    private TransactionRequest tx(BigDecimal amount) {
-        TransactionRequest r = new TransactionRequest();
-        r.setType(TransactionType.EXPENSE);
-        r.setAmount(amount);
-        r.setCategory(ExpenseCategory.FOOD);
-        r.setTransactionDate(LocalDate.of(2026, 7, 1));
-        return r;
-    }
-    private ExpenseTransaction entity() {
-        ExpenseTransaction t = new ExpenseTransaction();
-        t.setId(1L);
-        t.setUserId("user-1");
-        t.setType(TransactionType.EXPENSE);
-        t.setAmount(new BigDecimal("10"));
-        t.setCategory(ExpenseCategory.FOOD);
-        t.setTransactionDate(LocalDate.now());
-        t.setCreatedAt(LocalDateTime.now());
-        t.setUpdatedAt(LocalDateTime.now());
-        return t;
-    }
-    private BudgetRequest budget() {
-        BudgetRequest r = new BudgetRequest();
-        r.setCategory(ExpenseCategory.FOOD);
-        r.setMonthlyLimit(new BigDecimal("100.00"));
-        r.setMonth(7);
-        r.setYear(2026);
-        return r;
-    }
+  private ExpenseTransactionRepository transactions;
+  private BudgetRepository budgets;
+  private ExpenseActor actor;
+  @BeforeEach
+  void setup() {
+    transactions = mock(ExpenseTransactionRepository.class);
+    budgets = mock(BudgetRepository.class);
+    actor = new ExpenseActor("user-1");
+  }
+  @Test
+  void createsValidTransactionAndRejectsInvalidAmount() {
+    when(transactions.save(any(ExpenseTransaction.class))).thenAnswer(i -> {
+      ExpenseTransaction t = (ExpenseTransaction) i.getArguments()[0];
+      t.setId(1L);
+      return t;
+    });
+    TransactionService s = new TransactionServiceImpl(transactions);
+    assertEquals(new BigDecimal("25.00"), s.create(tx(new BigDecimal("25.00")), actor).getAmount());
+    TransactionRequest bad = tx(BigDecimal.ZERO);
+    assertEquals(
+        400, assertThrows(ExpenseException.class, () -> s.create(bad, actor)).getStatusCode());
+  }
+  @Test
+  void updatesExistingAndHandlesMissingAndForeignTransaction() {
+    ExpenseTransaction t = entity();
+    when(transactions.findById(1L)).thenReturn(Optional.of(t));
+    when(transactions.save(t)).thenReturn(t);
+    TransactionService s = new TransactionServiceImpl(transactions);
+    assertEquals(
+        new BigDecimal("30.00"), s.update(1L, tx(new BigDecimal("30.00")), actor).getAmount());
+    when(transactions.findById(9L)).thenReturn(Optional.empty());
+    assertEquals(
+        404, assertThrows(ExpenseException.class, () -> s.findById(9L, actor)).getStatusCode());
+    assertEquals(403,
+        assertThrows(ExpenseException.class, () -> s.findById(1L, new ExpenseActor("other")))
+            .getStatusCode());
+  }
+  @Test
+  void createsBudgetAndRejectsDuplicate() {
+    when(budgets.save(any(Budget.class))).thenAnswer(i -> {
+      Budget b = (Budget) i.getArguments()[0];
+      b.setId(2L);
+      return b;
+    });
+    BudgetService s = new BudgetServiceImpl(budgets);
+    assertEquals(new BigDecimal("100.00"), s.create(budget(), actor).getMonthlyLimit());
+    when(budgets.existsByUserIdAndCategoryAndMonthAndYear(
+             anyString(), any(ExpenseCategory.class), anyInt(), anyInt()))
+        .thenReturn(true);
+    assertEquals(
+        409, assertThrows(ExpenseException.class, () -> s.create(budget(), actor)).getStatusCode());
+  }
+  @Test
+  void reportsTotalsGroupingRemainingWarningAndExceeded() {
+    ExpenseTransaction expense = entity();
+    expense.setAmount(new BigDecimal("80"));
+    ExpenseTransaction income = entity();
+    income.setType(TransactionType.INCOME);
+    income.setAmount(new BigDecimal("200"));
+    income.setCategory(ExpenseCategory.SALARY);
+    when(transactions.findMonthly(eq("user-1"), any(LocalDate.class), any(LocalDate.class)))
+        .thenReturn(Arrays.asList(expense, income));
+    Budget food = new Budget();
+    food.setCategory(ExpenseCategory.FOOD);
+    food.setMonthlyLimit(new BigDecimal("100"));
+    Budget transport = new Budget();
+    transport.setCategory(ExpenseCategory.TRANSPORTATION);
+    transport.setMonthlyLimit(new BigDecimal("50"));
+    ExpenseTransaction over = entity();
+    over.setCategory(ExpenseCategory.TRANSPORTATION);
+    over.setAmount(new BigDecimal("60"));
+    when(transactions.findMonthly(eq("user-1"), any(LocalDate.class), any(LocalDate.class)))
+        .thenReturn(Arrays.asList(expense, income, over));
+    when(budgets.findByUserIdAndMonthAndYear("user-1", 7, 2026))
+        .thenReturn(Arrays.asList(food, transport));
+    MonthlySummaryResponse r =
+        new ReportServiceImpl(transactions, budgets, new BigDecimal("80")).monthly(7, 2026, actor);
+    assertEquals(new BigDecimal("200"), r.getTotalIncome());
+    assertEquals(new BigDecimal("140"), r.getTotalExpenses());
+    assertEquals(new BigDecimal("80"), r.getExpensesByCategory().get(ExpenseCategory.FOOD));
+    assertEquals(new BigDecimal("20"), r.getCategories().get(0).getRemainingBudget());
+    assertEquals(BudgetStatus.WARNING, r.getCategories().get(0).getStatus());
+    assertEquals(BudgetStatus.EXCEEDED, r.getCategories().get(1).getStatus());
+  }
+  private TransactionRequest tx(BigDecimal amount) {
+    TransactionRequest r = new TransactionRequest();
+    r.setType(TransactionType.EXPENSE);
+    r.setAmount(amount);
+    r.setCategory(ExpenseCategory.FOOD);
+    r.setTransactionDate(LocalDate.of(2026, 7, 1));
+    return r;
+  }
+  private ExpenseTransaction entity() {
+    ExpenseTransaction t = new ExpenseTransaction();
+    t.setId(1L);
+    t.setUserId("user-1");
+    t.setType(TransactionType.EXPENSE);
+    t.setAmount(new BigDecimal("10"));
+    t.setCategory(ExpenseCategory.FOOD);
+    t.setTransactionDate(LocalDate.now());
+    t.setCreatedAt(LocalDateTime.now());
+    t.setUpdatedAt(LocalDateTime.now());
+    return t;
+  }
+  private BudgetRequest budget() {
+    BudgetRequest r = new BudgetRequest();
+    r.setCategory(ExpenseCategory.FOOD);
+    r.setMonthlyLimit(new BigDecimal("100.00"));
+    r.setMonth(7);
+    r.setYear(2026);
+    return r;
+  }
 }

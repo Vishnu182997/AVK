@@ -1,8 +1,8 @@
 package com.example.commerce.user;
+import com.example.commerce.config.SecurityConfig;
 import java.util.*;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
-import com.example.commerce.config.SecurityConfig;
 import lombok.*;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;

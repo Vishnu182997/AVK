@@ -4,51 +4,49 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class RockPaperScissors {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    Random random = new Random();
 
-	public static void main(String[] args) {
+    String[] choices = {"Rock", "Paper", "Scissors"};
 
-		Scanner scanner = new Scanner(System.in);
-		Random random = new Random();
+    System.out.println("=== Rock, Paper, Scissors Game ===");
 
-		String[] choices = { "Rock", "Paper", "Scissors" };
+    while (true) {
+      System.out.println("\nChoose:");
+      System.out.println("1. Rock");
+      System.out.println("2. Paper");
+      System.out.println("3. Scissors");
+      System.out.println("4. Exit");
 
-		System.out.println("=== Rock, Paper, Scissors Game ===");
+      System.out.print("Enter your choice (1-4): ");
+      int userChoice = scanner.nextInt();
 
-		while (true) {
-			System.out.println("\nChoose:");
-			System.out.println("1. Rock");
-			System.out.println("2. Paper");
-			System.out.println("3. Scissors");
-			System.out.println("4. Exit");
+      if (userChoice == 4) {
+        System.out.println("Thanks for playing!");
+        break;
+      }
 
-			System.out.print("Enter your choice (1-4): ");
-			int userChoice = scanner.nextInt();
+      if (userChoice < 1 || userChoice > 3) {
+        System.out.println("Invalid choice! Please try again.");
+        continue;
+      }
 
-			if (userChoice == 4) {
-				System.out.println("Thanks for playing!");
-				break;
-			}
+      int computerChoice = random.nextInt(3);
 
-			if (userChoice < 1 || userChoice > 3) {
-				System.out.println("Invalid choice! Please try again.");
-				continue;
-			}
+      System.out.println("\nYou chose: " + choices[userChoice - 1]);
+      System.out.println("Computer chose: " + choices[computerChoice]);
 
-			int computerChoice = random.nextInt(3);
+      if (userChoice - 1 == computerChoice) {
+        System.out.println("It's a Tie!");
+      } else if ((userChoice == 1 && computerChoice == 2)
+          || (userChoice == 2 && computerChoice == 0) || (userChoice == 3 && computerChoice == 1)) {
+        System.out.println("You Win!");
+      } else {
+        System.out.println("Computer Wins!");
+      }
+    }
 
-			System.out.println("\nYou chose: " + choices[userChoice - 1]);
-			System.out.println("Computer chose: " + choices[computerChoice]);
-
-			if (userChoice - 1 == computerChoice) {
-				System.out.println("It's a Tie!");
-			} else if ((userChoice == 1 && computerChoice == 2) || (userChoice == 2 && computerChoice == 0)
-					|| (userChoice == 3 && computerChoice == 1)) {
-				System.out.println("You Win!");
-			} else {
-				System.out.println("Computer Wins!");
-			}
-		}
-
-		scanner.close();
-	}
+    scanner.close();
+  }
 }

@@ -8,8 +8,8 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
   List<WaitlistEntry> findByCustomerIdOrderByCreatedAtDesc(Long id);
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select w from WaitlistEntry w where w.status='WAITING' and w.service.id=:service and "
-         + "w.preferredDate=:date and (w.preferredStaff is null or w.preferredStaff.id=:staff) "
-         + "order by w.createdAt,w.id")
+      + "w.preferredDate=:date and (w.preferredStaff is null or w.preferredStaff.id=:staff) "
+      + "order by w.createdAt,w.id")
   List<WaitlistEntry>
   eligible(
       @Param("service") Long service, @Param("staff") Long staff, @Param("date") LocalDate date);

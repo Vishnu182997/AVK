@@ -1,8 +1,8 @@
 package com.example.commerce.wishlist;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
 import com.example.commerce.product.Product;
 import com.example.commerce.user.User;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "wishlist_item",

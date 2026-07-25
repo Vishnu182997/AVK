@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
   Page<Appointment> findByCustomerId(Long id, Pageable p);
   @Query("select a from Appointment a where a.staff.id=:s and a.appointmentDate=:d and a.status "
-         + "not in ('CANCELLED','NO_SHOW') and a.startTime<:end and a.endTime>:start")
+      + "not in ('CANCELLED','NO_SHOW') and a.startTime<:end and a.endTime>:start")
   List<Appointment>
   overlaps(@Param("s") Long s, @Param("d") LocalDate d, @Param("start") LocalTime start,
       @Param("end") LocalTime end);

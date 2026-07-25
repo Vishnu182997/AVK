@@ -1,152 +1,84 @@
 package com.example.chessAI.ai;
 
-
-import java.util.List;
-
 import com.example.chessAI.ChessBoard;
 import com.example.chessAI.Color;
 import com.example.chessAI.Move;
 import com.example.chessAI.MoveGenerator;
-
+import java.util.List;
 
 /**
  * Iterative Deepening Search
  */
 public class IterativeDeepening {
+  private AlphaBeta alphaBeta;
+  private MoveGenerator moveGenerator;
 
+  private long endTime;
 
-    private AlphaBeta alphaBeta;
-    private MoveGenerator moveGenerator;
+  public IterativeDeepening() {
+    Evaluation evaluation = new Evaluation();
 
-    private long endTime;
+    alphaBeta = new AlphaBeta(evaluation);
 
+    moveGenerator = new MoveGenerator();
+  }
 
-    public IterativeDeepening() {
+  /**
+   * Finds best move within given time.
+   *
+   * @param board current position
+   * @param color player
+   * @param maxDepth maximum search depth
+   * @param timeLimit milliseconds
+   */
+  public Move searchBestMove(ChessBoard board, Color color, int maxDepth, long timeLimit) {
+    endTime = System.currentTimeMillis() + timeLimit;
 
-        Evaluation evaluation = new Evaluation();
+    Move bestMove = null;
 
-        alphaBeta = new AlphaBeta(evaluation);
+    for (int depth = 1; depth <= maxDepth; depth++) {
+      if (timeExceeded()) {
+        break;
+      }
 
-        moveGenerator = new MoveGenerator();
+      Move currentBest = searchDepth(board, color, depth);
+
+      if (currentBest != null) {
+        bestMove = currentBest;
+      }
     }
 
+    return bestMove;
+  }
 
-    /**
-     * Finds best move within given time.
-     *
-     * @param board current position
-     * @param color player
-     * @param maxDepth maximum search depth
-     * @param timeLimit milliseconds
-     */
-    public Move searchBestMove(
-            ChessBoard board,
-            Color color,
-            int maxDepth,
-            long timeLimit) {
+  private Move searchDepth(ChessBoard board, Color color, int depth) {
+    List<Move> moves = moveGenerator.generateLegalMoves(board, color);
 
+    Move bestMove = null;
 
-        endTime =
-                System.currentTimeMillis()
-                + timeLimit;
+    int bestScore = Integer.MIN_VALUE;
 
+    for (Move move : moves) {
+      if (timeExceeded()) {
+        break;
+      }
 
-        Move bestMove = null;
+      board.makeMove(move);
 
+      int score = alphaBeta.search(board, depth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
 
-        for (int depth = 1;
-             depth <= maxDepth;
-             depth++) {
+      board.undoMove();
 
-
-            if (timeExceeded()) {
-                break;
-            }
-
-
-            Move currentBest =
-                    searchDepth(
-                            board,
-                            color,
-                            depth
-                    );
-
-
-            if (currentBest != null) {
-
-                bestMove = currentBest;
-            }
-        }
-
-
-        return bestMove;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
     }
 
+    return bestMove;
+  }
 
-
-    private Move searchDepth(
-            ChessBoard board,
-            Color color,
-            int depth) {
-
-
-        List<Move> moves =
-                moveGenerator.generateLegalMoves(
-                        board,
-                        color
-                );
-
-
-        Move bestMove = null;
-
-        int bestScore =
-                Integer.MIN_VALUE;
-
-
-
-        for (Move move : moves) {
-
-
-            if (timeExceeded()) {
-                break;
-            }
-
-
-            board.makeMove(move);
-
-
-
-            int score =
-                    alphaBeta.search(
-                            board,
-                            depth - 1,
-                            Integer.MIN_VALUE,
-                            Integer.MAX_VALUE,
-                            false
-                    );
-
-
-
-            board.undoMove();
-
-
-
-            if(score > bestScore) {
-
-                bestScore = score;
-                bestMove = move;
-            }
-        }
-
-
-        return bestMove;
-    }
-
-
-
-    private boolean timeExceeded() {
-
-        return System.currentTimeMillis()
-                >= endTime;
-    }
+  private boolean timeExceeded() {
+    return System.currentTimeMillis() >= endTime;
+  }
 }

@@ -1,6 +1,7 @@
 package com.example.appointment;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+
 import com.example.appointment.appointment.*;
 import com.example.appointment.common.DomainException;
 import com.example.appointment.offering.ServiceOffering;

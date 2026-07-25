@@ -2,6 +2,11 @@ package com.example.commerce.config;
 import com.example.commerce.user.*;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.http.HttpHeaders;
@@ -18,11 +23,6 @@ import org.springframework.security.web.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.*;
 import org.springframework.web.filter.OncePerRequestFilter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {

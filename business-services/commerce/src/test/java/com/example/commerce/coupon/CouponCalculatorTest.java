@@ -1,8 +1,9 @@
 package com.example.commerce.coupon;
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.example.commerce.common.CommerceException;
 import java.math.BigDecimal;
 import java.time.Instant;
-import com.example.commerce.common.CommerceException;
 import org.junit.jupiter.api.Test;
 class CouponCalculatorTest {
   private final CouponCalculator calculator = new CouponCalculator();

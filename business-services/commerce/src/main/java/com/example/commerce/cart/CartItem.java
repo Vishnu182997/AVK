@@ -1,7 +1,7 @@
 package com.example.commerce.cart;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
 import com.example.commerce.product.Product;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "cart_item",

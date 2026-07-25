@@ -1,6 +1,6 @@
 package com.example.commerce.audit;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "audit_log",

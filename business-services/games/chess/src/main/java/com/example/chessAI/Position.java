@@ -6,156 +6,143 @@ import java.io.Serializable;
  * Represents a position (square) on the chess board.
  */
 public class Position implements Serializable {
+  private static final long serialVersionUID = 1L;
 
-    private static final long serialVersionUID = 1L;
+  private int row;
+  private int col;
 
-    private int row;
-    private int col;
-
-    /**
-     * Creates a position.
-     *
-     * @param row Board row (0-7)
-     * @param col Board column (0-7)
-     */
-    public Position(int row, int col) {
-
-        if (!isValid(row, col)) {
-            throw new IllegalArgumentException(
-                    "Invalid board position: (" + row + "," + col + ")");
-        }
-
-        this.row = row;
-        this.col = col;
+  /**
+   * Creates a position.
+   *
+   * @param row Board row (0-7)
+   * @param col Board column (0-7)
+   */
+  public Position(int row, int col) {
+    if (!isValid(row, col)) {
+      throw new IllegalArgumentException("Invalid board position: (" + row + "," + col + ")");
     }
 
-    /**
-     * Copy constructor.
-     */
-    public Position(Position other) {
-        this(other.row, other.col);
+    this.row = row;
+    this.col = col;
+  }
+
+  /**
+   * Copy constructor.
+   */
+  public Position(Position other) {
+    this(other.row, other.col);
+  }
+
+  /**
+   * Returns the row.
+   */
+  public int getRow() {
+    return row;
+  }
+
+  /**
+   * Returns the column.
+   */
+  public int getCol() {
+    return col;
+  }
+
+  /**
+   * Sets the row.
+   */
+  public void setRow(int row) {
+    if (!isValid(row, this.col)) {
+      throw new IllegalArgumentException("Invalid row: " + row);
     }
 
-    /**
-     * Returns the row.
-     */
-    public int getRow() {
-        return row;
+    this.row = row;
+  }
+
+  /**
+   * Sets the column.
+   */
+  public void setCol(int col) {
+    if (!isValid(this.row, col)) {
+      throw new IllegalArgumentException("Invalid column: " + col);
     }
 
-    /**
-     * Returns the column.
-     */
-    public int getCol() {
-        return col;
+    this.col = col;
+  }
+
+  /**
+   * Sets both coordinates.
+   */
+  public void setPosition(int row, int col) {
+    if (!isValid(row, col)) {
+      throw new IllegalArgumentException("Invalid board position.");
     }
 
-    /**
-     * Sets the row.
-     */
-    public void setRow(int row) {
+    this.row = row;
+    this.col = col;
+  }
 
-        if (!isValid(row, this.col)) {
-            throw new IllegalArgumentException("Invalid row: " + row);
-        }
+  /**
+   * Checks whether a board coordinate is valid.
+   */
+  public static boolean isValid(int row, int col) {
+    return row >= 0 && row < 8 && col >= 0 && col < 8;
+  }
 
-        this.row = row;
+  /**
+   * Converts the position to algebraic notation.
+   * Example:
+   * (7,0) -> a1
+   * (0,4) -> e8
+   */
+  public String toAlgebraic() {
+    char file = (char) ('a' + col);
+    int rank = 8 - row;
+
+    return "" + file + rank;
+  }
+
+  /**
+   * Creates a Position from algebraic notation.
+   * Example:
+   * e2 -> (6,4)
+   */
+  public static Position fromAlgebraic(String square) {
+    if (square == null || square.length() != 2) {
+      throw new IllegalArgumentException("Invalid square: " + square);
     }
 
-    /**
-     * Sets the column.
-     */
-    public void setCol(int col) {
+    char file = Character.toLowerCase(square.charAt(0));
+    char rank = square.charAt(1);
 
-        if (!isValid(this.row, col)) {
-            throw new IllegalArgumentException("Invalid column: " + col);
-        }
+    int col = file - 'a';
+    int row = 8 - Character.getNumericValue(rank);
 
-        this.col = col;
-    }
+    return new Position(row, col);
+  }
 
-    /**
-     * Sets both coordinates.
-     */
-    public void setPosition(int row, int col) {
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
 
-        if (!isValid(row, col)) {
-            throw new IllegalArgumentException(
-                    "Invalid board position.");
-        }
+    if (!(obj instanceof Position))
+      return false;
 
-        this.row = row;
-        this.col = col;
-    }
+    Position other = (Position) obj;
 
-    /**
-     * Checks whether a board coordinate is valid.
-     */
-    public static boolean isValid(int row, int col) {
-        return row >= 0 && row < 8 &&
-               col >= 0 && col < 8;
-    }
+    return row == other.row && col == other.col;
+  }
 
-    /**
-     * Converts the position to algebraic notation.
-     * Example:
-     * (7,0) -> a1
-     * (0,4) -> e8
-     */
-    public String toAlgebraic() {
+  @Override
+  public int hashCode() {
+    int result = row;
+    result = 31 * result + col;
 
-        char file = (char) ('a' + col);
-        int rank = 8 - row;
+    return result;
+  }
 
-        return "" + file + rank;
-    }
-
-    /**
-     * Creates a Position from algebraic notation.
-     * Example:
-     * e2 -> (6,4)
-     */
-    public static Position fromAlgebraic(String square) {
-
-        if (square == null || square.length() != 2) {
-            throw new IllegalArgumentException("Invalid square: " + square);
-        }
-
-        char file = Character.toLowerCase(square.charAt(0));
-        char rank = square.charAt(1);
-
-        int col = file - 'a';
-        int row = 8 - Character.getNumericValue(rank);
-
-        return new Position(row, col);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-
-        if (this == obj)
-            return true;
-
-        if (!(obj instanceof Position))
-            return false;
-
-        Position other = (Position) obj;
-
-        return row == other.row &&
-               col == other.col;
-    }
-
-    @Override
-    public int hashCode() {
-
-        int result = row;
-        result = 31 * result + col;
-
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return toAlgebraic();
-    }
+  @Override
+  public String toString() {
+    return toAlgebraic();
+  }
 }
