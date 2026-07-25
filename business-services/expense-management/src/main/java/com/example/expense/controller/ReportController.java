@@ -1,2 +1,20 @@
-package com.example.expense.controller; import org.springframework.web.bind.annotation.*; import com.example.expense.dto.*; import com.example.expense.service.ReportService;
-@RestController @RequestMapping("/api/expense-reports") public class ReportController {private final ReportService service;public ReportController(ReportService s){service=s;}@GetMapping("/monthly") public MonthlySummaryResponse monthly(@RequestParam Integer month,@RequestParam Integer year,@RequestAttribute(TransactionController.ACTOR_ATTRIBUTE) ExpenseActor actor){return service.monthly(month,year,actor);}}
+package com.example.expense.controller;
+
+import org.springframework.web.bind.annotation.*;
+
+import com.example.expense.dto.*;
+import com.example.expense.service.ReportService;
+
+@RestController
+@RequestMapping("/api/expense-reports")
+public class ReportController {
+    private final ReportService service;
+    public ReportController(ReportService s) {
+        service = s;
+    }
+    @GetMapping("/monthly")
+    public MonthlySummaryResponse monthly(@RequestParam Integer month, @RequestParam Integer year,
+            @RequestAttribute(TransactionController.ACTOR_ATTRIBUTE) ExpenseActor actor) {
+        return service.monthly(month, year, actor);
+    }
+}
