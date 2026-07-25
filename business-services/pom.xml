@@ -32,5 +32,6 @@
 	
 	<modules>
 		<module>games</module>
+		<module>helpdesk</module>
 	</modules>
 </project>
