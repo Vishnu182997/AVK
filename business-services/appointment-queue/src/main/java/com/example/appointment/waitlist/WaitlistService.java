@@ -1,3 +1,96 @@
 package com.example.appointment.waitlist;
-import com.example.appointment.appointment.*; import com.example.appointment.common.DomainException; import com.example.appointment.notification.NotificationService; import com.example.appointment.offering.*; import com.example.appointment.staff.*; import com.example.appointment.user.User; import java.time.*; import java.util.*; import javax.annotation.PostConstruct; import org.springframework.beans.factory.annotation.Value; import org.springframework.scheduling.annotation.Scheduled; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
-@Service public class WaitlistService {private final WaitlistRepository repo;private final ServiceOfferingRepository offerings;private final StaffProfileRepository staff;private final AppointmentService appointments;private final NotificationService notifications;private final long expiryMinutes;public WaitlistService(WaitlistRepository r,ServiceOfferingRepository o,StaffProfileRepository s,AppointmentService a,NotificationService n,@Value("${app.waitlist.offer-expiry-minutes:30}")long e){repo=r;offerings=o;staff=s;appointments=a;notifications=n;expiryMinutes=e;} @PostConstruct void wire(){appointments.setWaitlist(this);} @Transactional public WaitlistEntry join(User u,Long serviceId,Long staffId,LocalDate date,LocalTime start,LocalTime end){ServiceOffering o=offerings.findById(serviceId).filter(ServiceOffering::isActive).orElseThrow(()->DomainException.notFound("Active service not found"));StaffProfile s=staffId==null?null:staff.findById(staffId).orElseThrow(()->DomainException.notFound("Staff not found"));if(!start.isBefore(end))throw DomainException.bad("INVALID_WAITLIST_WINDOW","Preferred start must precede end");return repo.save(new WaitlistEntry(u,o,s,date,start,end));} @Transactional public void offerFor(Appointment cancelled){List<WaitlistEntry> eligible=repo.eligible(cancelled.getService().getId(),cancelled.getStaff().getId(),cancelled.getAppointmentDate());if(!eligible.isEmpty()){WaitlistEntry w=eligible.get(0);w.offer(cancelled,Instant.now().plusSeconds(expiryMinutes*60));repo.save(w);notifications.waitlistOffer(w);}} @Transactional public Appointment accept(Long id,User u){WaitlistEntry w=owned(id,u);if(w.getStatus()!=WaitlistEntry.Status.OFFERED||w.getOfferExpiresAt().isBefore(Instant.now()))throw DomainException.conflict("WAITLIST_OFFER_EXPIRED","Waitlist offer is not active");Appointment held=w.getOfferedAppointment();Appointment a=appointments.book(u,w.getService().getId(),held.getStaff().getId(),held.getAppointmentDate(),held.getStartTime());w.accept();repo.save(w);return a;} @Transactional public void cancel(Long id,User u){WaitlistEntry w=owned(id,u);w.cancel();repo.save(w);} public List<WaitlistEntry> list(User u){return repo.findByCustomerIdOrderByCreatedAtDesc(u.getId());} private WaitlistEntry owned(Long id,User u){return repo.findById(id).filter(w->w.getCustomer().getId().equals(u.getId())).orElseThrow(()->DomainException.notFound("Waitlist entry not found"));} @Scheduled(fixedDelayString="${app.waitlist.expiry-scan-ms:60000}") @Transactional public void expire(){for(WaitlistEntry w:repo.findByStatusAndOfferExpiresAtBefore(WaitlistEntry.Status.OFFERED,Instant.now()))w.expire();} }
+import com.example.appointment.appointment.*;
+import com.example.appointment.common.DomainException;
+import com.example.appointment.notification.NotificationService;
+import com.example.appointment.offering.*;
+import com.example.appointment.staff.*;
+import com.example.appointment.user.User;
+import java.time.*;
+import java.util.*;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+@Service
+public class WaitlistService {
+  private final WaitlistRepository repo;
+  private final ServiceOfferingRepository offerings;
+  private final StaffProfileRepository staff;
+  private final AppointmentService appointments;
+  private final NotificationService notifications;
+  private final long expiryMinutes;
+  public WaitlistService(WaitlistRepository r, ServiceOfferingRepository o,
+      StaffProfileRepository s, AppointmentService a, NotificationService n,
+      @Value("${app.waitlist.offer-expiry-minutes:30}") long e) {
+    repo = r;
+    offerings = o;
+    staff = s;
+    appointments = a;
+    notifications = n;
+    expiryMinutes = e;
+  }
+  @PostConstruct
+  void wire() {
+    appointments.setWaitlist(this);
+  }
+  @Transactional
+  public WaitlistEntry join(
+      User u, Long serviceId, Long staffId, LocalDate date, LocalTime start, LocalTime end) {
+    ServiceOffering o =
+        offerings.findById(serviceId)
+            .filter(ServiceOffering::isActive)
+            .orElseThrow(() -> DomainException.notFound("Active service not found"));
+    StaffProfile s = staffId == null
+        ? null
+        : staff.findById(staffId).orElseThrow(() -> DomainException.notFound("Staff not found"));
+    if (!start.isBefore(end))
+      throw DomainException.bad("INVALID_WAITLIST_WINDOW", "Preferred start must precede end");
+    return repo.save(new WaitlistEntry(u, o, s, date, start, end));
+  }
+  @Transactional
+  public void offerFor(Appointment cancelled) {
+    List<WaitlistEntry> eligible = repo.eligible(cancelled.getService().getId(),
+        cancelled.getStaff().getId(), cancelled.getAppointmentDate());
+    if (!eligible.isEmpty()) {
+      WaitlistEntry w = eligible.get(0);
+      w.offer(cancelled, Instant.now().plusSeconds(expiryMinutes * 60));
+      repo.save(w);
+      notifications.waitlistOffer(w);
+    }
+  }
+  @Transactional
+  public Appointment accept(Long id, User u) {
+    WaitlistEntry w = owned(id, u);
+    if (w.getStatus() != WaitlistEntry.Status.OFFERED
+        || w.getOfferExpiresAt().isBefore(Instant.now()))
+      throw DomainException.conflict("WAITLIST_OFFER_EXPIRED", "Waitlist offer is not active");
+    Appointment held = w.getOfferedAppointment();
+    Appointment a = appointments.book(u, w.getService().getId(), held.getStaff().getId(),
+        held.getAppointmentDate(), held.getStartTime());
+    w.accept();
+    repo.save(w);
+    return a;
+  }
+  @Transactional
+  public void cancel(Long id, User u) {
+    WaitlistEntry w = owned(id, u);
+    w.cancel();
+    repo.save(w);
+  }
+  public List<WaitlistEntry> list(User u) {
+    return repo.findByCustomerIdOrderByCreatedAtDesc(u.getId());
+  }
+  private WaitlistEntry owned(Long id, User u) {
+    return repo.findById(id)
+        .filter(w -> w.getCustomer().getId().equals(u.getId()))
+        .orElseThrow(() -> DomainException.notFound("Waitlist entry not found"));
+  }
+  @Scheduled(fixedDelayString = "${app.waitlist.expiry-scan-ms:60000}")
+  @Transactional
+  public void expire() {
+    for (WaitlistEntry w :
+        repo.findByStatusAndOfferExpiresAtBefore(WaitlistEntry.Status.OFFERED, Instant.now()))
+      w.expire();
+  }
+}

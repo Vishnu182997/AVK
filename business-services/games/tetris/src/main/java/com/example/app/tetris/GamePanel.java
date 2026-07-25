@@ -260,7 +260,7 @@ public class GamePanel extends JPanel implements Runnable {
 			}
 		}
 	}
-	
+
 	@Override
 	protected void paintComponent(Graphics g) {
 
@@ -286,7 +286,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 		g2.dispose();
 	}
-	
+
 	private void drawSidePanel(Graphics2D g) {
 
 	    int x = WIDTH + 20;
@@ -316,7 +316,7 @@ public class GamePanel extends JPanel implements Runnable {
 	    g.drawString("P Pause", x, 515);
 	    g.drawString("R Restart", x, 535);
 	}
-	
+
 	private void drawNextPiece(Graphics2D g, int startX, int startY) {
 
 	    if (nextPiece == null)
@@ -346,7 +346,7 @@ public class GamePanel extends JPanel implements Runnable {
 	        }
 	    }
 	}
-	
+
 	private void drawCenteredMessage(Graphics2D g, String text, Color color) {
 
 		g.setColor(new Color(0, 0, 0, 180));

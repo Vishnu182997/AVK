@@ -216,7 +216,7 @@ public class Board {
 
 		}
 	}
-	
+
 	public boolean isGameOver() {
 
 	    // If any block reaches the top row,
@@ -232,13 +232,13 @@ public class Board {
 
 	    return false;
 	}
-	
+
 	public void reset() {
 
 	    clearBoard();
 
 	}
-	
+
 	public int getBlockCount() {
 
 	    int count = 0;

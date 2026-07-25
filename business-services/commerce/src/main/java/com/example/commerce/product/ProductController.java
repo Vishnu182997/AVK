@@ -1,2 +1,66 @@
-package com.example.commerce.product; import java.math.BigDecimal; import javax.validation.Valid; import org.springframework.data.domain.*; import org.springframework.http.*; import org.springframework.security.access.prepost.PreAuthorize; import org.springframework.web.bind.annotation.*;
-@RestController public class ProductController {private final ProductService service;private final CategoryRepository categories;public ProductController(ProductService s,CategoryRepository c){service=s;categories=c;}@GetMapping("/api/products") Page<ProductDtos.ProductResponse> all(@RequestParam(required=false)String query,@RequestParam(required=false)Long categoryId,@RequestParam(required=false)BigDecimal minPrice,@RequestParam(required=false)BigDecimal maxPrice,Pageable p){return service.search(query,categoryId,minPrice,maxPrice,p);}@GetMapping("/api/products/{id}") ProductDtos.ProductResponse one(@PathVariable Long id){return service.one(id);}@PostMapping("/api/admin/products") @PreAuthorize("hasAnyRole('SELLER','ADMIN')") ResponseEntity<ProductDtos.ProductResponse> create(@Valid @RequestBody ProductDtos.ProductRequest r){return ResponseEntity.status(201).body(service.create(r));}@PutMapping("/api/admin/products/{id}") @PreAuthorize("hasAnyRole('SELLER','ADMIN')") ProductDtos.ProductResponse update(@PathVariable Long id,@Valid @RequestBody ProductDtos.ProductRequest r){return service.update(id,r);}@PatchMapping("/api/admin/products/{id}/status") @PreAuthorize("hasAnyRole('SELLER','ADMIN')") ProductDtos.ProductResponse status(@PathVariable Long id,@Valid @RequestBody ProductDtos.StatusRequest r){return service.status(id,r.getActive());}@GetMapping("/api/categories") java.util.List<ProductDtos.CategoryResponse> categories(){java.util.List<ProductDtos.CategoryResponse>x=new java.util.ArrayList<>();categories.findAll().stream().filter(Category::isActive).forEach(c->x.add(new ProductDtos.CategoryResponse(c.getId(),c.getName(),c.getDescription())));return x;}@PostMapping("/api/admin/categories") @PreAuthorize("hasRole('ADMIN')") ResponseEntity<ProductDtos.CategoryResponse> category(@Valid @RequestBody ProductDtos.CategoryRequest r){Category c=new Category();c.setName(r.getName().trim());c.setDescription(r.getDescription());c=categories.save(c);return ResponseEntity.status(201).body(new ProductDtos.CategoryResponse(c.getId(),c.getName(),c.getDescription()));}}
+package com.example.commerce.product;
+import java.math.BigDecimal;
+import javax.validation.Valid;
+import org.springframework.data.domain.*;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+@RestController
+public class ProductController {
+  private final ProductService service;
+  private final CategoryRepository categories;
+  public ProductController(ProductService s, CategoryRepository c) {
+    service = s;
+    categories = c;
+  }
+  @GetMapping("/api/products")
+  Page<ProductDtos.ProductResponse> all(@RequestParam(required = false) String query,
+      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) BigDecimal minPrice,
+      @RequestParam(required = false) BigDecimal maxPrice, Pageable p) {
+    return service.search(query, categoryId, minPrice, maxPrice, p);
+  }
+  @GetMapping("/api/products/{id}")
+  ProductDtos.ProductResponse one(@PathVariable Long id) {
+    return service.one(id);
+  }
+  @PostMapping("/api/admin/products")
+  @PreAuthorize("hasAnyRole('SELLER','ADMIN')")
+  ResponseEntity<ProductDtos.ProductResponse> create(
+      @Valid @RequestBody ProductDtos.ProductRequest r) {
+    return ResponseEntity.status(201).body(service.create(r));
+  }
+  @PutMapping("/api/admin/products/{id}")
+  @PreAuthorize("hasAnyRole('SELLER','ADMIN')")
+  ProductDtos.ProductResponse update(
+      @PathVariable Long id, @Valid @RequestBody ProductDtos.ProductRequest r) {
+    return service.update(id, r);
+  }
+  @PatchMapping("/api/admin/products/{id}/status")
+  @PreAuthorize("hasAnyRole('SELLER','ADMIN')")
+  ProductDtos.ProductResponse status(
+      @PathVariable Long id, @Valid @RequestBody ProductDtos.StatusRequest r) {
+    return service.status(id, r.getActive());
+  }
+  @GetMapping("/api/categories")
+  java.util.List<ProductDtos.CategoryResponse> categories() {
+    java.util.List<ProductDtos.CategoryResponse> x = new java.util.ArrayList<>();
+    categories.findAll()
+        .stream()
+        .filter(Category::isActive)
+        .forEach(c
+            -> x.add(new ProductDtos.CategoryResponse(c.getId(), c.getName(), c.getDescription())));
+    return x;
+  }
+  @PostMapping("/api/admin/categories")
+  @PreAuthorize("hasRole('ADMIN')")
+  ResponseEntity<ProductDtos.CategoryResponse> category(
+      @Valid @RequestBody ProductDtos.CategoryRequest r) {
+    Category c = new Category();
+    c.setName(r.getName().trim());
+    c.setDescription(r.getDescription());
+    c = categories.save(c);
+    return ResponseEntity.status(201).body(
+        new ProductDtos.CategoryResponse(c.getId(), c.getName(), c.getDescription()));
+  }
+}

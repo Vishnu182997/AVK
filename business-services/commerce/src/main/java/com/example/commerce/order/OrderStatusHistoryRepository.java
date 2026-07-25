@@ -1,1 +1,3 @@
-package com.example.commerce.order; import org.springframework.data.jpa.repository.JpaRepository; public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory,Long>{}
+package com.example.commerce.order;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, Long> {}

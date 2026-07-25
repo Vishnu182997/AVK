@@ -1,4 +1,84 @@
 package com.example.appointment.config;
-import com.example.appointment.user.*; import io.jsonwebtoken.*; import io.jsonwebtoken.security.Keys; import java.io.IOException; import java.nio.charset.StandardCharsets; import java.util.*; import javax.servlet.*; import javax.servlet.http.*; import org.springframework.beans.factory.annotation.Value; import org.springframework.context.annotation.*; import org.springframework.http.HttpHeaders; import org.springframework.security.authentication.*; import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity; import org.springframework.security.config.annotation.web.builders.HttpSecurity; import org.springframework.security.config.http.SessionCreationPolicy; import org.springframework.security.core.authority.SimpleGrantedAuthority; import org.springframework.security.core.context.SecurityContextHolder; import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; import org.springframework.security.crypto.password.PasswordEncoder; import org.springframework.security.web.*; import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; import org.springframework.stereotype.Component; import org.springframework.web.filter.OncePerRequestFilter;
-@Configuration @EnableGlobalMethodSecurity(prePostEnabled=true) public class SecurityConfig { @Bean PasswordEncoder encoder(){return new BCryptPasswordEncoder();} @Bean SecurityFilterChain chain(HttpSecurity h,JwtFilter f)throws Exception{return h.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests().antMatchers("/api/auth/**","/api/services/**","/api/slots/**","/swagger-ui/**","/v3/api-docs/**","/actuator/health","/ws/**").permitAll().antMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated().and().addFilterBefore(f,UsernamePasswordAuthenticationFilter.class).exceptionHandling().authenticationEntryPoint((q,s,e)->s.sendError(401)).accessDeniedHandler((q,s,e)->s.sendError(403)).and().build();} }
-@Component class JwtFilter extends OncePerRequestFilter { private final UserRepository users; private final byte[] key; JwtFilter(UserRepository u,@Value("${app.jwt.secret}")String k){users=u;key=k.getBytes(StandardCharsets.UTF_8);} protected void doFilterInternal(HttpServletRequest r,HttpServletResponse s,FilterChain c)throws ServletException,IOException{String h=r.getHeader(HttpHeaders.AUTHORIZATION);if(h!=null&&h.startsWith("Bearer "))try{Claims x=Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(key)).build().parseClaimsJws(h.substring(7)).getBody();users.findById(Long.valueOf(x.getSubject())).ifPresent(u->SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(u,null,Collections.singleton(new SimpleGrantedAuthority("ROLE_"+u.getRole().name())))));}catch(JwtException|NumberFormatException ignored){}c.doFilter(r,s);} }
+import com.example.appointment.user.*;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.*;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.*;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+@Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig {
+  @Bean
+  PasswordEncoder encoder() {
+    return new BCryptPasswordEncoder();
+  }
+  @Bean
+  SecurityFilterChain chain(HttpSecurity h, JwtFilter f) throws Exception {
+    return h.csrf()
+        .disable()
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+        .authorizeRequests()
+        .antMatchers("/api/auth/**", "/api/services/**", "/api/slots/**", "/swagger-ui/**",
+            "/v3/api-docs/**", "/actuator/health", "/ws/**")
+        .permitAll()
+        .antMatchers("/api/admin/**")
+        .hasRole("ADMIN")
+        .anyRequest()
+        .authenticated()
+        .and()
+        .addFilterBefore(f, UsernamePasswordAuthenticationFilter.class)
+        .exceptionHandling()
+        .authenticationEntryPoint((q, s, e) -> s.sendError(401))
+        .accessDeniedHandler((q, s, e) -> s.sendError(403))
+        .and()
+        .build();
+  }
+}
+@Component
+class JwtFilter extends OncePerRequestFilter {
+  private final UserRepository users;
+  private final byte[] key;
+  JwtFilter(UserRepository u, @Value("${app.jwt.secret}") String k) {
+    users = u;
+    key = k.getBytes(StandardCharsets.UTF_8);
+  }
+  protected void doFilterInternal(HttpServletRequest r, HttpServletResponse s, FilterChain c)
+      throws ServletException, IOException {
+    String h = r.getHeader(HttpHeaders.AUTHORIZATION);
+    if (h != null && h.startsWith("Bearer "))
+      try {
+        Claims x = Jwts.parserBuilder()
+                       .setSigningKey(Keys.hmacShaKeyFor(key))
+                       .build()
+                       .parseClaimsJws(h.substring(7))
+                       .getBody();
+        users.findById(Long.valueOf(x.getSubject()))
+            .ifPresent(u
+                -> SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken(u, null,
+                        Collections.singleton(
+                            new SimpleGrantedAuthority("ROLE_" + u.getRole().name())))));
+      } catch (JwtException | NumberFormatException ignored) {
+      }
+    c.doFilter(r, s);
+  }
+}

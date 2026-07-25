@@ -1,3 +1,122 @@
 package com.example.appointment.appointment;
-import com.example.appointment.common.*; import com.example.appointment.offering.ServiceOffering; import com.example.appointment.staff.StaffProfile; import com.example.appointment.user.User; import java.time.*; import javax.persistence.*;
-@Entity @Table(name="appointment",uniqueConstraints=@UniqueConstraint(name="uk_appointment_slot",columnNames={"staff_id","appointment_date","start_time"})) public class Appointment extends BaseEntity { @Column(nullable=false,unique=true) private String confirmationNumber; @ManyToOne(optional=false) private User customer; @ManyToOne(optional=false) private StaffProfile staff; @ManyToOne(optional=false) private ServiceOffering service; @Column(name="appointment_date",nullable=false) private LocalDate appointmentDate; @Column(name="start_time",nullable=false) private LocalTime startTime; @Column(name="end_time",nullable=false) private LocalTime endTime; @Enumerated(EnumType.STRING) @Column(nullable=false) private AppointmentStatus status=AppointmentStatus.BOOKED; private String tokenNumber; private Instant checkedInAt; private Instant startedAt; private Instant completedAt; private Instant cancelledAt; private boolean reminderSent; @Version private long version; protected Appointment(){} public Appointment(String c,User u,StaffProfile st,ServiceOffering s,LocalDate d,LocalTime a,LocalTime b){confirmationNumber=c;customer=u;staff=st;service=s;appointmentDate=d;startTime=a;endTime=b;} public String getConfirmationNumber(){return confirmationNumber;} public User getCustomer(){return customer;} public StaffProfile getStaff(){return staff;} public ServiceOffering getService(){return service;} public LocalDate getAppointmentDate(){return appointmentDate;} public LocalTime getStartTime(){return startTime;} public LocalTime getEndTime(){return endTime;} public AppointmentStatus getStatus(){return status;} public String getTokenNumber(){return tokenNumber;} public Instant getCheckedInAt(){return checkedInAt;} public Instant getStartedAt(){return startedAt;} public Instant getCompletedAt(){return completedAt;} public void reschedule(StaffProfile s,LocalDate d,LocalTime a,LocalTime b){require(AppointmentStatus.BOOKED);staff=s;appointmentDate=d;startTime=a;endTime=b;} public void cancel(){if(status==AppointmentStatus.COMPLETED||status==AppointmentStatus.CANCELLED)throw DomainException.conflict("INVALID_STATUS_TRANSITION","Appointment cannot be cancelled");status=AppointmentStatus.CANCELLED;cancelledAt=Instant.now();} public void checkIn(String token){require(AppointmentStatus.BOOKED);status=AppointmentStatus.WAITING;tokenNumber=token;checkedInAt=Instant.now();} public void start(){require(AppointmentStatus.WAITING);status=AppointmentStatus.IN_PROGRESS;startedAt=Instant.now();} public void complete(){require(AppointmentStatus.IN_PROGRESS);status=AppointmentStatus.COMPLETED;completedAt=Instant.now();} public void noShow(){require(AppointmentStatus.WAITING);status=AppointmentStatus.NO_SHOW;} public boolean isReminderSent(){return reminderSent;} public void reminderSent(){reminderSent=true;} private void require(AppointmentStatus expected){if(status!=expected)throw DomainException.conflict("INVALID_STATUS_TRANSITION","Expected "+expected+" but was "+status);} }
+import com.example.appointment.common.*;
+import com.example.appointment.offering.ServiceOffering;
+import com.example.appointment.staff.StaffProfile;
+import com.example.appointment.user.User;
+import java.time.*;
+import javax.persistence.*;
+@Entity
+@Table(name = "appointment",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_appointment_slot", columnNames = {"staff_id", "appointment_date", "start_time"}))
+public class Appointment extends BaseEntity {
+  @Column(nullable = false, unique = true) private String confirmationNumber;
+  @ManyToOne(optional = false) private User customer;
+  @ManyToOne(optional = false) private StaffProfile staff;
+  @ManyToOne(optional = false) private ServiceOffering service;
+  @Column(name = "appointment_date", nullable = false) private LocalDate appointmentDate;
+  @Column(name = "start_time", nullable = false) private LocalTime startTime;
+  @Column(name = "end_time", nullable = false) private LocalTime endTime;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private AppointmentStatus status = AppointmentStatus.BOOKED;
+  private String tokenNumber;
+  private Instant checkedInAt;
+  private Instant startedAt;
+  private Instant completedAt;
+  private Instant cancelledAt;
+  private boolean reminderSent;
+  @Version private long version;
+  protected Appointment() {}
+  public Appointment(
+      String c, User u, StaffProfile st, ServiceOffering s, LocalDate d, LocalTime a, LocalTime b) {
+    confirmationNumber = c;
+    customer = u;
+    staff = st;
+    service = s;
+    appointmentDate = d;
+    startTime = a;
+    endTime = b;
+  }
+  public String getConfirmationNumber() {
+    return confirmationNumber;
+  }
+  public User getCustomer() {
+    return customer;
+  }
+  public StaffProfile getStaff() {
+    return staff;
+  }
+  public ServiceOffering getService() {
+    return service;
+  }
+  public LocalDate getAppointmentDate() {
+    return appointmentDate;
+  }
+  public LocalTime getStartTime() {
+    return startTime;
+  }
+  public LocalTime getEndTime() {
+    return endTime;
+  }
+  public AppointmentStatus getStatus() {
+    return status;
+  }
+  public String getTokenNumber() {
+    return tokenNumber;
+  }
+  public Instant getCheckedInAt() {
+    return checkedInAt;
+  }
+  public Instant getStartedAt() {
+    return startedAt;
+  }
+  public Instant getCompletedAt() {
+    return completedAt;
+  }
+  public void reschedule(StaffProfile s, LocalDate d, LocalTime a, LocalTime b) {
+    require(AppointmentStatus.BOOKED);
+    staff = s;
+    appointmentDate = d;
+    startTime = a;
+    endTime = b;
+  }
+  public void cancel() {
+    if (status == AppointmentStatus.COMPLETED || status == AppointmentStatus.CANCELLED)
+      throw DomainException.conflict(
+          "INVALID_STATUS_TRANSITION", "Appointment cannot be cancelled");
+    status = AppointmentStatus.CANCELLED;
+    cancelledAt = Instant.now();
+  }
+  public void checkIn(String token) {
+    require(AppointmentStatus.BOOKED);
+    status = AppointmentStatus.WAITING;
+    tokenNumber = token;
+    checkedInAt = Instant.now();
+  }
+  public void start() {
+    require(AppointmentStatus.WAITING);
+    status = AppointmentStatus.IN_PROGRESS;
+    startedAt = Instant.now();
+  }
+  public void complete() {
+    require(AppointmentStatus.IN_PROGRESS);
+    status = AppointmentStatus.COMPLETED;
+    completedAt = Instant.now();
+  }
+  public void noShow() {
+    require(AppointmentStatus.WAITING);
+    status = AppointmentStatus.NO_SHOW;
+  }
+  public boolean isReminderSent() {
+    return reminderSent;
+  }
+  public void reminderSent() {
+    reminderSent = true;
+  }
+  private void require(AppointmentStatus expected) {
+    if (status != expected)
+      throw DomainException.conflict(
+          "INVALID_STATUS_TRANSITION", "Expected " + expected + " but was " + status);
+  }
+}

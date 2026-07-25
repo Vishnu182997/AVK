@@ -1,1 +1,12 @@
-package com.example.commerce.order; import static org.junit.jupiter.api.Assertions.*; import org.junit.jupiter.api.Test; class OrderStatusTest{@Test void enforcesFulfilmentSequence(){assertTrue(OrderStatus.PAID.canTransitionTo(OrderStatus.CONFIRMED));assertTrue(OrderStatus.PACKED.canTransitionTo(OrderStatus.SHIPPED));assertFalse(OrderStatus.PENDING_PAYMENT.canTransitionTo(OrderStatus.DELIVERED));assertFalse(OrderStatus.CANCELLED.canTransitionTo(OrderStatus.PAID));}}
+package com.example.commerce.order;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+class OrderStatusTest {
+  @Test
+  void enforcesFulfilmentSequence() {
+    assertTrue(OrderStatus.PAID.canTransitionTo(OrderStatus.CONFIRMED));
+    assertTrue(OrderStatus.PACKED.canTransitionTo(OrderStatus.SHIPPED));
+    assertFalse(OrderStatus.PENDING_PAYMENT.canTransitionTo(OrderStatus.DELIVERED));
+    assertFalse(OrderStatus.CANCELLED.canTransitionTo(OrderStatus.PAID));
+  }
+}

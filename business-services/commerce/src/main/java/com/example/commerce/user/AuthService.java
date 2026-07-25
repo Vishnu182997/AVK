@@ -1,3 +1,51 @@
 package com.example.commerce.user;
-import com.example.commerce.common.CommerceException; import com.example.commerce.config.SecurityConfig.JwtService; import com.example.commerce.notification.*; import org.springframework.http.HttpStatus; import org.springframework.security.crypto.password.PasswordEncoder; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
-@Service public class AuthService {private final UserRepository users;private final PasswordEncoder encoder;private final JwtService jwt;private final NotificationRepository notifications;public AuthService(UserRepository u,PasswordEncoder e,JwtService j,NotificationRepository n){users=u;encoder=e;jwt=j;notifications=n;} @Transactional public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest r){if(users.findByEmailIgnoreCase(r.getEmail()).isPresent())throw new CommerceException(HttpStatus.CONFLICT,"Email is already registered");User u=new User();u.setName(r.getName().trim());u.setEmail(r.getEmail().trim().toLowerCase());u.setPasswordHash(encoder.encode(r.getPassword()));u.setRole(User.Role.CUSTOMER);u=users.save(u);Notification n=new Notification();n.setUser(u);n.setType("REGISTRATION");n.setMessage("Welcome to Smart Commerce");notifications.save(n);return response(u);} @Transactional(readOnly=true) public AuthDtos.AuthResponse login(AuthDtos.LoginRequest r){User u=users.findByEmailIgnoreCase(r.getEmail()).filter(User::isActive).orElseThrow(()->new CommerceException(HttpStatus.UNAUTHORIZED,"Invalid credentials"));if(!encoder.matches(r.getPassword(),u.getPasswordHash()))throw new CommerceException(HttpStatus.UNAUTHORIZED,"Invalid credentials");return response(u);}private AuthDtos.AuthResponse response(User u){return new AuthDtos.AuthResponse(jwt.issue(u),"Bearer",u.getId(),u.getEmail(),u.getRole());}}
+import com.example.commerce.common.CommerceException;
+import com.example.commerce.config.SecurityConfig.JwtService;
+import com.example.commerce.notification.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+@Service
+public class AuthService {
+  private final UserRepository users;
+  private final PasswordEncoder encoder;
+  private final JwtService jwt;
+  private final NotificationRepository notifications;
+  public AuthService(UserRepository u, PasswordEncoder e, JwtService j, NotificationRepository n) {
+    users = u;
+    encoder = e;
+    jwt = j;
+    notifications = n;
+  }
+  @Transactional
+  public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest r) {
+    if (users.findByEmailIgnoreCase(r.getEmail()).isPresent())
+      throw new CommerceException(HttpStatus.CONFLICT, "Email is already registered");
+    User u = new User();
+    u.setName(r.getName().trim());
+    u.setEmail(r.getEmail().trim().toLowerCase());
+    u.setPasswordHash(encoder.encode(r.getPassword()));
+    u.setRole(User.Role.CUSTOMER);
+    u = users.save(u);
+    Notification n = new Notification();
+    n.setUser(u);
+    n.setType("REGISTRATION");
+    n.setMessage("Welcome to Smart Commerce");
+    notifications.save(n);
+    return response(u);
+  }
+  @Transactional(readOnly = true)
+  public AuthDtos.AuthResponse login(AuthDtos.LoginRequest r) {
+    User u = users.findByEmailIgnoreCase(r.getEmail())
+                 .filter(User::isActive)
+                 .orElseThrow(
+                     () -> new CommerceException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+    if (!encoder.matches(r.getPassword(), u.getPasswordHash()))
+      throw new CommerceException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+    return response(u);
+  }
+  private AuthDtos.AuthResponse response(User u) {
+    return new AuthDtos.AuthResponse(jwt.issue(u), "Bearer", u.getId(), u.getEmail(), u.getRole());
+  }
+}
