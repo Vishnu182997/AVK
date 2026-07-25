@@ -1,6 +1,6 @@
 package com.example.commerce.user;
-import javax.validation.Valid;
 import com.example.commerce.config.SecurityConfig;
+import javax.validation.Valid;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 @RestController

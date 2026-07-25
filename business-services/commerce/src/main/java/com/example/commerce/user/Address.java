@@ -1,6 +1,6 @@
 package com.example.commerce.user;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "address", indexes = @Index(name = "ix_address_user", columnList = "user_id"))

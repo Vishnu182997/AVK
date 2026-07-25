@@ -3,102 +3,92 @@ package com.example.chessAI.gui;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
-
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 public class MoveAnimation {
+  private static final int FPS = 60;
+  private static final int DURATION = 250; // milliseconds
 
-    private static final int FPS = 60;
-    private static final int DURATION = 250; // milliseconds
+  private final JPanel boardPanel;
 
-    private final JPanel boardPanel;
+  private Image pieceImage;
 
-    private Image pieceImage;
+  private Point start;
+  private Point end;
+  private Point current;
 
-    private Point start;
-    private Point end;
-    private Point current;
+  private Timer timer;
 
-    private Timer timer;
+  private long startTime;
 
-    private long startTime;
+  private boolean running;
 
-    private boolean running;
+  public MoveAnimation(JPanel boardPanel) {
+    this.boardPanel = boardPanel;
+  }
 
-    public MoveAnimation(JPanel boardPanel) {
-        this.boardPanel = boardPanel;
+  /**
+   * Starts the animation.
+   */
+  public void start(Image image, Point start, Point end) {
+    if (image == null || start == null || end == null) {
+      return;
     }
 
-    /**
-     * Starts the animation.
-     */
-    public void start(Image image, Point start, Point end) {
+    this.pieceImage = image;
+    this.start = start;
+    this.end = end;
+    this.current = new Point(start);
 
-        if (image == null || start == null || end == null) {
-            return;
-        }
+    running = true;
 
-        this.pieceImage = image;
-        this.start = start;
-        this.end = end;
-        this.current = new Point(start);
+    startTime = System.currentTimeMillis();
 
-        running = true;
-
-        startTime = System.currentTimeMillis();
-
-        if (timer != null) {
-            timer.stop();
-        }
-
-        timer = new Timer(1000 / FPS, e -> update());
-
-        timer.start();
+    if (timer != null) {
+      timer.stop();
     }
 
-    /**
-     * Updates animation.
-     */
-    private void update() {
+    timer = new Timer(1000 / FPS, e -> update());
 
-        long elapsed = System.currentTimeMillis() - startTime;
+    timer.start();
+  }
 
-        double progress = Math.min(1.0, (double) elapsed / DURATION);
+  /**
+   * Updates animation.
+   */
+  private void update() {
+    long elapsed = System.currentTimeMillis() - startTime;
 
-        current.x = (int) (start.x + (end.x - start.x) * progress);
-        current.y = (int) (start.y + (end.y - start.y) * progress);
+    double progress = Math.min(1.0, (double) elapsed / DURATION);
 
-        boardPanel.repaint();
+    current.x = (int) (start.x + (end.x - start.x) * progress);
+    current.y = (int) (start.y + (end.y - start.y) * progress);
 
-        if (progress >= 1.0) {
-            running = false;
-            timer.stop();
-            boardPanel.repaint();
-        }
+    boardPanel.repaint();
+
+    if (progress >= 1.0) {
+      running = false;
+      timer.stop();
+      boardPanel.repaint();
+    }
+  }
+
+  /**
+   * Paints the animated piece.
+   */
+  public void paint(Graphics g) {
+    if (!running || pieceImage == null) {
+      return;
     }
 
-    /**
-     * Paints the animated piece.
-     */
-    public void paint(Graphics g) {
+    g.drawImage(pieceImage, current.x, current.y, boardPanel);
+  }
 
-        if (!running || pieceImage == null) {
-            return;
-        }
-
-        g.drawImage(
-                pieceImage,
-                current.x,
-                current.y,
-                boardPanel
-        );
-    }
-
-    /**
-     * Returns whether animation is active.
-     */
-    public boolean isRunning() {
-        return running;
-    }
+  /**
+   * Returns whether animation is active.
+   */
+  public boolean isRunning() {
+    return running;
+  }
 }

@@ -1,8 +1,8 @@
 package com.example.commerce.product;
-import java.math.BigDecimal;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
 import com.example.commerce.user.User;
+import java.math.BigDecimal;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "product",

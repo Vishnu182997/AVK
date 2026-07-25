@@ -1,8 +1,8 @@
 package com.example.commerce.coupon;
+import com.example.commerce.common.BaseEntity;
 import java.math.BigDecimal;
 import java.time.Instant;
 import javax.persistence.*;
-import com.example.commerce.common.BaseEntity;
 import lombok.*;
 @Entity
 @Table(name = "coupon",

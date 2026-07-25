@@ -1,8 +1,8 @@
 package com.example.commerce.payment;
-import java.math.BigDecimal;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
 import com.example.commerce.order.CustomerOrder;
+import java.math.BigDecimal;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "payment",

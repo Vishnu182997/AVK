@@ -1,6 +1,6 @@
 package com.example.commerce.product;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "inventory",

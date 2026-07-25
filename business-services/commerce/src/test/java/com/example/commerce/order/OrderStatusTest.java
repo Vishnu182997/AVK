@@ -1,5 +1,6 @@
 package com.example.commerce.order;
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.Test;
 class OrderStatusTest {
   @Test

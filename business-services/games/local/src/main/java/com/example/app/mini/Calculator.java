@@ -1,143 +1,140 @@
 package com.example.app.mini;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
 
 public class Calculator extends JFrame implements ActionListener {
+  JTextField txtFirst, txtSecond, txtResult;
+  JButton btnAdd, btnSub, btnMul, btnDiv, btnMod, btnSqrt, btnLog, btnPowN;
+  ;
 
-	JTextField txtFirst, txtSecond, txtResult;
-	JButton btnAdd, btnSub, btnMul, btnDiv, btnMod, btnSqrt, btnLog, btnPowN;;
+  public Calculator() {
+    setTitle("Simple Calculator");
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-	public Calculator() {
+    JPanel mainPanel = new JPanel(new GridLayout(4, 2, 1, 1));
+    mainPanel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
-		setTitle("Simple Calculator");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 1, 1));
 
-		JPanel mainPanel = new JPanel(new GridLayout(4, 2, 1, 1));
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+    // Row 1
+    mainPanel.add(new JLabel("First Number:"));
+    txtFirst = new JTextField(15);
+    mainPanel.add(txtFirst);
 
-		JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 1, 1));
+    // Row 2
+    mainPanel.add(new JLabel("Second Number:"));
+    txtSecond = new JTextField(15);
+    mainPanel.add(txtSecond);
 
-		// Row 1
-		mainPanel.add(new JLabel("First Number:"));
-		txtFirst = new JTextField(15);
-		mainPanel.add(txtFirst);
+    // Row 3
+    mainPanel.add(new JLabel("Operation:"));
 
-		// Row 2
-		mainPanel.add(new JLabel("Second Number:"));
-		txtSecond = new JTextField(15);
-		mainPanel.add(txtSecond);
+    btnAdd = new JButton("+");
+    btnSub = new JButton("-");
+    btnMul = new JButton("*");
+    btnDiv = new JButton("/");
+    btnMod = new JButton("%");
+    btnSqrt = new JButton("√");
+    btnLog = new JButton("log");
+    btnPowN = new JButton("xⁿ");
 
-		// Row 3
-		mainPanel.add(new JLabel("Operation:"));
+    buttonPanel.add(btnAdd);
+    buttonPanel.add(btnSub);
+    buttonPanel.add(btnMul);
+    buttonPanel.add(btnDiv);
+    buttonPanel.add(btnMod);
+    buttonPanel.add(btnSqrt);
+    buttonPanel.add(btnLog);
+    buttonPanel.add(btnPowN);
 
-		btnAdd = new JButton("+");
-		btnSub = new JButton("-");
-		btnMul = new JButton("*");
-		btnDiv = new JButton("/");
-		btnMod = new JButton("%");
-		btnSqrt = new JButton("√");
-		btnLog = new JButton("log");
-		btnPowN = new JButton("xⁿ");
+    mainPanel.add(buttonPanel);
 
-		buttonPanel.add(btnAdd);
-		buttonPanel.add(btnSub);
-		buttonPanel.add(btnMul);
-		buttonPanel.add(btnDiv);
-		buttonPanel.add(btnMod);
-		buttonPanel.add(btnSqrt);
-		buttonPanel.add(btnLog);
-		buttonPanel.add(btnPowN);
+    // Row 4
+    mainPanel.add(new JLabel("Result:"));
 
-		mainPanel.add(buttonPanel);
+    txtResult = new JTextField(15);
+    txtResult.setEditable(false);
+    mainPanel.add(txtResult);
 
-		// Row 4
-		mainPanel.add(new JLabel("Result:"));
+    add(mainPanel);
 
-		txtResult = new JTextField(15);
-		txtResult.setEditable(false);
-		mainPanel.add(txtResult);
+    // Register listeners
+    btnAdd.addActionListener(this);
+    btnSub.addActionListener(this);
+    btnMul.addActionListener(this);
+    btnDiv.addActionListener(this);
+    btnMod.addActionListener(this);
+    btnSqrt.addActionListener(this);
+    btnLog.addActionListener(this);
+    btnPowN.addActionListener(this);
 
-		add(mainPanel);
+    pack(); // Window size based on content
+    setLocationRelativeTo(null); // Center on screen
+    setResizable(false); // Optional
+    setVisible(true);
+  }
 
-		// Register listeners
-		btnAdd.addActionListener(this);
-		btnSub.addActionListener(this);
-		btnMul.addActionListener(this);
-		btnDiv.addActionListener(this);
-		btnMod.addActionListener(this);
-		btnSqrt.addActionListener(this);
-		btnLog.addActionListener(this);
-		btnPowN.addActionListener(this);
+  @Override
+  public void actionPerformed(ActionEvent e) {
+    try {
+      double num1 = Double.parseDouble(txtFirst.getText());
+      double result = 0;
 
-		pack(); // Window size based on content
-		setLocationRelativeTo(null); // Center on screen
-		setResizable(false); // Optional
-		setVisible(true);
-	}
+      // Read second number only when required
+      double num2 = 0;
+      if (e.getSource() != btnSqrt && e.getSource() != btnLog) {
+        num2 = Double.parseDouble(txtSecond.getText());
+      }
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
+      if (e.getSource() == btnAdd)
+        result = num1 + num2;
 
-		try {
-			double num1 = Double.parseDouble(txtFirst.getText());
-			double result = 0;
+      else if (e.getSource() == btnSub)
+        result = num1 - num2;
 
-			// Read second number only when required
-			double num2 = 0;
-			if (e.getSource() != btnSqrt && e.getSource() != btnLog) {
+      else if (e.getSource() == btnMul)
+        result = num1 * num2;
 
-				num2 = Double.parseDouble(txtSecond.getText());
-			}
+      else if (e.getSource() == btnDiv) {
+        if (num2 == 0) {
+          txtResult.setText("Cannot divide by zero");
+          return;
+        }
+        result = num1 / num2;
+      }
 
-			if (e.getSource() == btnAdd)
-				result = num1 + num2;
+      else if (e.getSource() == btnMod)
+        result = num1 % num2;
 
-			else if (e.getSource() == btnSub)
-				result = num1 - num2;
+      else if (e.getSource() == btnSqrt) {
+        if (num1 < 0) {
+          txtResult.setText("Invalid Input");
+          return;
+        }
+        result = Math.sqrt(num1);
+      }
 
-			else if (e.getSource() == btnMul)
-				result = num1 * num2;
+      else if (e.getSource() == btnLog) {
+        if (num1 <= 0) {
+          txtResult.setText("Invalid Input");
+          return;
+        }
+        result = Math.log10(num1);
+      }
 
-			else if (e.getSource() == btnDiv) {
-				if (num2 == 0) {
-					txtResult.setText("Cannot divide by zero");
-					return;
-				}
-				result = num1 / num2;
-			}
+      else if (e.getSource() == btnPowN)
+        result = Math.pow(num1, num2);
 
-			else if (e.getSource() == btnMod)
-				result = num1 % num2;
+      txtResult.setText(String.valueOf(result));
 
-			else if (e.getSource() == btnSqrt) {
-				if (num1 < 0) {
-					txtResult.setText("Invalid Input");
-					return;
-				}
-				result = Math.sqrt(num1);
-			}
+    } catch (NumberFormatException ex) {
+      txtResult.setText("Invalid Input");
+    }
+  }
 
-			else if (e.getSource() == btnLog) {
-				if (num1 <= 0) {
-					txtResult.setText("Invalid Input");
-					return;
-				}
-				result = Math.log10(num1);
-			}
-
-			else if (e.getSource() == btnPowN)
-				result = Math.pow(num1, num2);
-
-			txtResult.setText(String.valueOf(result));
-
-		} catch (NumberFormatException ex) {
-			txtResult.setText("Invalid Input");
-		}
-	}
-
-	public static void main(String[] args) {
-		new Calculator();
-	}
+  public static void main(String[] args) {
+    new Calculator();
+  }
 }

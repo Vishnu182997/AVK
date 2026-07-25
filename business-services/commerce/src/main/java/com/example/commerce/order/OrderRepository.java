@@ -11,7 +11,7 @@ public interface OrderRepository
   Optional<CustomerOrder> findByIdAndUserId(Long id, Long userId);
   long countByStatus(OrderStatus s);
   @Query("select coalesce(sum(o.total),0) from CustomerOrder o where o.status in :statuses and "
-         + "o.createdAt between :from and :to")
+      + "o.createdAt between :from and :to")
   BigDecimal
   revenue(@Param("statuses") Collection<OrderStatus> statuses, @Param("from") Instant from,
       @Param("to") Instant to);

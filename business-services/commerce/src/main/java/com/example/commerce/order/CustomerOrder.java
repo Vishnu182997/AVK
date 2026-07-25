@@ -1,9 +1,9 @@
 package com.example.commerce.order;
+import com.example.commerce.common.BaseEntity;
+import com.example.commerce.user.User;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.*;
-import com.example.commerce.common.BaseEntity;
-import com.example.commerce.user.User;
 import lombok.*;
 @Entity
 @Table(name = "customer_order",

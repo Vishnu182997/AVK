@@ -1,7 +1,7 @@
 package com.example.commerce.notification;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
 import com.example.commerce.user.User;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(

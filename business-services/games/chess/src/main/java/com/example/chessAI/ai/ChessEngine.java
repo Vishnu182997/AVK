@@ -1,87 +1,76 @@
 package com.example.chessAI.ai;
 
-import java.util.List;
-
 import com.example.chessAI.ChessBoard;
 import com.example.chessAI.Color;
 import com.example.chessAI.Move;
 import com.example.chessAI.MoveGenerator;
-
+import java.util.List;
 
 public class ChessEngine {
+  private int searchDepth;
+  private Evaluation evaluation;
+  private MoveGenerator moveGenerator;
 
-    private int searchDepth;
-    private Evaluation evaluation;
-    private MoveGenerator moveGenerator;
+  public ChessEngine() {
+    this.searchDepth = 3; // Default depth
+    this.evaluation = new Evaluation();
+    this.moveGenerator = new MoveGenerator();
+  }
 
-    public ChessEngine() {
-        this.searchDepth = 3; // Default depth
-        this.evaluation = new Evaluation();
-        this.moveGenerator = new MoveGenerator();
+  /**
+   * Finds the best move for the current player.
+   */
+  public Move getBestMove(ChessBoard board, Color sideToMove) {
+    List<Move> moves = moveGenerator.generateLegalMoves(board, sideToMove);
+
+    if (moves == null || moves.isEmpty()) {
+      return null;
     }
 
-    /**
-     * Finds the best move for the current player.
-     */
-    public Move getBestMove(ChessBoard board, Color sideToMove) {
+    Move bestMove = null;
+    int bestScore = Integer.MIN_VALUE;
 
-        List<Move> moves = moveGenerator.generateLegalMoves(board, sideToMove);
+    AlphaBeta alphaBeta = new AlphaBeta(evaluation);
 
-        if (moves == null || moves.isEmpty()) {
-            return null;
-        }
+    for (Move move : moves) {
+      board.makeMove(move);
 
-        Move bestMove = null;
-        int bestScore = Integer.MIN_VALUE;
+      int score =
+          alphaBeta.search(board, searchDepth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
 
-        AlphaBeta alphaBeta = new AlphaBeta(evaluation);
+      board.undoMove();
 
-        for (Move move : moves) {
-
-            board.makeMove(move);
-
-            int score = alphaBeta.search(
-                    board,
-                    searchDepth - 1,
-                    Integer.MIN_VALUE,
-                    Integer.MAX_VALUE,
-                    false
-            );
-
-            board.undoMove();
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
-            }
-        }
-
-        return bestMove;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
     }
 
-    /**
-     * Returns the evaluation of the current position.
-     */
-    public int evaluatePosition(ChessBoard board) {
-        return evaluation.evaluate(board);
+    return bestMove;
+  }
+
+  /**
+   * Returns the evaluation of the current position.
+   */
+  public int evaluatePosition(ChessBoard board) {
+    return evaluation.evaluate(board);
+  }
+
+  /**
+   * Sets engine search depth.
+   */
+  public void setSearchDepth(int depth) {
+    if (depth < 1) {
+      depth = 1;
     }
 
-    /**
-     * Sets engine search depth.
-     */
-    public void setSearchDepth(int depth) {
+    this.searchDepth = depth;
+  }
 
-        if (depth < 1) {
-            depth = 1;
-        }
-
-        this.searchDepth = depth;
-    }
-
-    /**
-     * Returns current search depth.
-     */
-    public int getSearchDepth() {
-        return searchDepth;
-    }
+  /**
+   * Returns current search depth.
+   */
+  public int getSearchDepth() {
+    return searchDepth;
+  }
 }

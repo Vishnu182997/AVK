@@ -1,11 +1,10 @@
 package com.example.chessAI.ai;
 
-
 public enum MoveFlag {
 
-    EXACT,
+  EXACT,
 
-    LOWER_BOUND,
+  LOWER_BOUND,
 
-    UPPER_BOUND
+  UPPER_BOUND
 }

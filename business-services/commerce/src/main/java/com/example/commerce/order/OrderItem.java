@@ -1,7 +1,7 @@
 package com.example.commerce.order;
+import com.example.commerce.common.BaseEntity;
 import java.math.BigDecimal;
 import javax.persistence.*;
-import com.example.commerce.common.BaseEntity;
 import lombok.*;
 @Entity
 @Table(

@@ -1,6 +1,6 @@
 package com.example.commerce.order;
-import javax.persistence.*;
 import com.example.commerce.common.BaseEntity;
+import javax.persistence.*;
 import lombok.*;
 @Entity
 @Table(name = "order_status_history",

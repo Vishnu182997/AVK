@@ -1,7 +1,7 @@
 package com.example.commerce.user;
+import com.example.commerce.common.BaseEntity;
 import java.util.*;
 import javax.persistence.*;
-import com.example.commerce.common.BaseEntity;
 import lombok.*;
 @Entity
 @Table(name = "commerce_user",
