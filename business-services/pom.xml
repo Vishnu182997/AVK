@@ -34,5 +34,6 @@
 		<module>games</module>
 		<module>helpdesk</module>
 		<module>expense-management</module>
+		<module>commerce</module>
 	</modules>
 </project>

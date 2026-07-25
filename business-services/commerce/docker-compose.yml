@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: commerce
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commerce"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  commerce:
+    build: .
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/commerce
+      DB_USER: commerce
+      DB_PASSWORD: commerce
+      JWT_SECRET: ${JWT_SECRET:?set a Base64 secret encoding at least 32 bytes}
+    ports: ["8080:8080"]

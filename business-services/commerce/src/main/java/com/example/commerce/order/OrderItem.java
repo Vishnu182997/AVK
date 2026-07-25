@@ -1,0 +1,3 @@
+package com.example.commerce.order;
+import java.math.BigDecimal; import javax.persistence.*; import com.example.commerce.common.BaseEntity; import lombok.*;
+@Entity @Table(name="order_item",indexes=@Index(name="ix_order_item_product",columnList="productId")) @Getter @Setter public class OrderItem extends BaseEntity { @ManyToOne(optional=false,fetch=FetchType.LAZY) private CustomerOrder order; @Column(nullable=false) private Long productId; @Column(nullable=false,length=160) private String productName; @Column(nullable=false,precision=19,scale=2) private BigDecimal unitPrice; @Column(nullable=false) private int quantity; @Column(nullable=false,precision=19,scale=2) private BigDecimal lineTotal; }
