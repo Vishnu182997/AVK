@@ -1,0 +1,3 @@
+package com.example.commerce.review;
+import javax.persistence.*; import com.example.commerce.common.BaseEntity; import com.example.commerce.product.Product; import com.example.commerce.user.User; import lombok.*;
+@Entity @Table(name="review",uniqueConstraints=@UniqueConstraint(name="uk_review_user_product",columnNames={"user_id","product_id"}),indexes=@Index(name="ix_review_product",columnList="product_id")) @Getter @Setter public class Review extends BaseEntity { @ManyToOne(optional=false,fetch=FetchType.LAZY) private User user; @ManyToOne(optional=false,fetch=FetchType.LAZY) private Product product; @Column(nullable=false) private int rating; @Column(nullable=false,length=2000) private String comment; @Column(nullable=false) private boolean verifiedPurchase; }

@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/commerce}
+    username: ${DB_USER:commerce}
+    password: ${DB_PASSWORD:commerce}
+  jpa:
+    hibernate.ddl-auto: validate
+    open-in-view: false
+  flyway.enabled: true
+commerce:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
+  cors-origins: ${CORS_ORIGINS:http://localhost:3000}
+management.endpoints.web.exposure.include: health,info,metrics
+springdoc.swagger-ui.path: /swagger-ui.html
