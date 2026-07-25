@@ -35,5 +35,6 @@
 		<module>helpdesk</module>
 		<module>expense-management</module>
 		<module>commerce</module>
+		<module>appointment-queue</module>
 	</modules>
 </project>

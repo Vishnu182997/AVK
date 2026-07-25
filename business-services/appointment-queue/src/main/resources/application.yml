@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/appointments}
+    username: ${DATABASE_USER:appointments}
+    password: ${DATABASE_PASSWORD:appointments}
+  jpa:
+    hibernate.ddl-auto: validate
+    open-in-view: false
+  flyway.enabled: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-development-secret-key-change-me-123456789}
+    expiry-seconds: ${JWT_EXPIRY_SECONDS:3600}
+  check-in-window-minutes: ${CHECK_IN_WINDOW_MINUTES:60}
+  cancellation-window-minutes: ${CANCELLATION_WINDOW_MINUTES:60}
+  waitlist:
+    offer-expiry-minutes: ${WAITLIST_OFFER_EXPIRY_MINUTES:30}
+    expiry-scan-ms: ${WAITLIST_SCAN_MS:60000}
+  reminder:
+    window-hours: ${REMINDER_WINDOW_HOURS:24}
+    scan-ms: ${REMINDER_SCAN_MS:300000}
+management.endpoints.web.exposure.include: health,info,metrics
