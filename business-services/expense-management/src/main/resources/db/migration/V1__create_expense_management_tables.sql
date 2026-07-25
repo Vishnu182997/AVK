@@ -1,0 +1,5 @@
+CREATE TABLE Expense_Transaction (Transaction_Id BIGINT NOT NULL AUTO_INCREMENT, User_Id VARCHAR(100) NOT NULL, Type VARCHAR(10) NOT NULL, Amount DECIMAL(19,2) NOT NULL, Category VARCHAR(30) NOT NULL, Description VARCHAR(500), Transaction_Date DATE NOT NULL, Created_At TIMESTAMP NOT NULL, Updated_At TIMESTAMP NOT NULL, PRIMARY KEY (Transaction_Id));
+CREATE INDEX IX_Expense_Transaction_User_Date ON Expense_Transaction (User_Id, Transaction_Date);
+CREATE INDEX IX_Expense_Transaction_User_Category ON Expense_Transaction (User_Id, Category);
+CREATE TABLE Expense_Budget (Budget_Id BIGINT NOT NULL AUTO_INCREMENT, User_Id VARCHAR(100) NOT NULL, Category VARCHAR(30) NOT NULL, Monthly_Limit DECIMAL(19,2) NOT NULL, Budget_Month INTEGER NOT NULL, Budget_Year INTEGER NOT NULL, Created_At TIMESTAMP NOT NULL, Updated_At TIMESTAMP NOT NULL, PRIMARY KEY (Budget_Id), CONSTRAINT UK_Expense_Budget_User_Category_Month UNIQUE (User_Id, Category, Budget_Month, Budget_Year));
+CREATE INDEX IX_Expense_Budget_User_Month ON Expense_Budget (User_Id, Budget_Year, Budget_Month);
